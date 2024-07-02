@@ -20,8 +20,34 @@ For more information, join the creapunk community [Discord](https://discord.gg/V
 ## STRUCTURE
 
 ![](./assets/TunePulseDiagram.png)
+![](./assets/TunePulseControlSystem.png)
 
+## DESIGN REQUIREMENTS
 
+|||||
+|-|-|-|-|
+| MCU freq:                     |   170000000 Hz            |  6 ns |                     |
+| PWM and current control loop: |       41503 Hz            | 24 us |  4000 cycles/period |
+| FOC control loop:             |       16384 Hz (2^14 Hz)  | 61 us | 10167 cycles/period |
+
+## R&D TODOs
+
+Check acoustic noise on different PWM frequencies (in particular 41500Hz and 32768kHz)
+
+Test on 48V with load less than 3R
+
+### List of required intermodule communication channels
+
+- Required position/velocity/torque setpoint
+
+- Control current d/q
+- Control voltage a/b
+- Control voltage ABCD
+- Sense current ABCD
+- Sense current a/b
+- Sense current d/q
+- Sense position
+- Sense velocity
 
 ## SETUP
 
