@@ -4,15 +4,55 @@
 // Libraries
 #include "Arduino.h"
 
-#define BOOT_ADDR \
-  0x1FFF0000  // MCU bootloader address for STM32G431, need to change if needed
-              // for other MCUs.
+#if defined(ARDUINO_GENERIC_G431C6UX) || defined(ARDUINO_GENERIC_G431C8UX) || \
+    defined(ARDUINO_GENERIC_G431CBUX) || defined(ARDUINO_GENERIC_G441CBUX)
+#define BOOTVTAB ((BootVectorTable*)BootAddr[G4])
 #define MCU_IRQS 71u  // Page number 28 in the reference manual for STM32G431
-#define BOOTVTAB ((BootVectorTable*)BOOT_ADDR)
+//! Add new MCU families here
+
+#else
+#error "Unsupported MCU family"
+#endif
+
+enum {
+  C0,
+  F030x8,
+  F030xC,
+  F03xx,
+  F05,
+  F07,
+  F09,
+  F10xx,
+  F105,
+  F107,
+  F10XL,
+  F2,
+  F3,
+  F4,
+  F7,
+  G0,
+  G4,
+  H503,
+  H563,
+  H573,
+  H7x,
+  H7A,
+  H7B,
+  L0,
+  L1,
+  L4,
+  L5,
+  WBA,
+  WBX,
+  WL,
+  U5
+};
 
 ////////////////////////////////*
-////* Struct definitions *//////
+////* Struct and variable definitions *//////
 ////////////////////////////////*
+
+extern volatile uint32_t BootAddr[];
 
 typedef struct {
   uint32_t* Initial_SP;
