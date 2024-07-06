@@ -23,6 +23,11 @@ void JumpToBootloader(void) {
   /* Set the clock to the default state */
   HAL_RCC_DeInit();
 
+  /* Disable peripehral */
+  HAL_DeInit();
+  // If needed to disable other peripherals, do it here, SPI, I2C, UART, and CAN
+  // should be disabled, but we can tested it first.
+
   /* Clear Interrupt Enable Register & Interrupt Pending Register */
   for (uint8_t i = 0; i < (MCU_IRQS + 31u) / 32; i++) {
     NVIC->ICER[i] = 0xFFFFFFFF;

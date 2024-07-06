@@ -4,8 +4,10 @@
 // Libraries
 #include "Arduino.h"
 
-#define BOOT_ADDR 0x1FFF0000  // my MCU boot code base address
-#define MCU_IRQS 70u          // no. of NVIC IRQ inputs
+#define BOOT_ADDR \
+  0x1FFF0000  // MCU bootloader address for STM32G431, need to change if needed
+              // for other MCUs.
+#define MCU_IRQS 71u  // Page number 28 in the reference manual for STM32G431
 #define BOOTVTAB ((BootVectorTable*)BOOT_ADDR)
 
 ////////////////////////////////*
