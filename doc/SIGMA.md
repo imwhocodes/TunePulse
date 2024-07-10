@@ -74,6 +74,7 @@ Low level layer is built after ALFA's ideology of communication channels and com
 1. **Selector.** This block can be used to create discrete changes in system behaviour. It can be initialized with a number of Modules, which write to same Channels and perform 'similar' functions. At any moment only one Module can be active, which ensures Channel write rules established earlier. Selector control also implemented via separate Channel, which holds information on which Module should be used.
 1. **Computational module.** This block is analogues to computational module in ALFA. 
 It performs predefined computations on data from input Channels and writes data to output Channels. The Module should have minimal to no internal state and should not contain any decision making logic.
+Also some Modules contain device Drivers, which allows Module to read data from external sensors and control external devices such as PWM motor driver.
 1. **Computational block.** This block represents basic building block which can be used inside Module to create complex behaviours and perform calculations. It can't write/read to/from Channels, and can be used only inside Module. PID regulator, velocity estimator, IIR/FIR filter all falls down in this category.
 
 #### Multithreading
@@ -87,3 +88,27 @@ The Sequencer is responsible to control overall system's behaviour by selecting 
 The decision has been made to limit the control over the Controller layer to Channels, which will allow the Sequencer to change the setpoints and select the required Selectors' modes of operation.
 
 This decision is motivated by intention to avoid creating special control interfaces to manage Controller. That way Sequencer is able at any point read any Channel for decision making or debug purposes as well as the ability to asyncronously change Controller behaviour while not interrupting it's operation.
+
+## Implementation
+
+### Channels
+
+Channels implemented as global volatile variables, separated in different namespaces. Read and write access to Channels should be performed only in guarded critical code sections, which ensures that data will not be changed while read/write in progress.
+
+For safety reasons each channel is REQUIRED to have default value, which should be always written to a channel if no other source is available, and all Modules reading from the Channel should check for this value to be aware if data is valid or not.
+
+Also for the ease of debugging, each read and write operation to a Channel should be performed with the use of dedicated macro.
+
+### Modules
+
+Every Module is a class defining input and output Channels as well as formulae, connecting inputs to outputs.
+
+To ensure Channel write safety Channels divided into "Write groups", each corresponding to distinct task, i.e. group, carying required voltages of phases A and B: `VOLTG_SIN` and `VOLTG_COS`.
+
+Each Module can belong to only a single Write group.
+
+### Selector
+
+Selector is a special type of Module. It can't perform calculations on its own, however it can contain a group of Modules, belonging to the same Write group. Also Selector has control Channel, which is used to select which Module should be in use at any given time.
+
+Only one Selector per Write group is allowed. This rule guarantees Channels write safety.
