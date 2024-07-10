@@ -6,6 +6,9 @@ Task of designing robust and expandable control system is not trivial. Controlle
 
 There is a lot of similarities with designing a control system of a robot, so in the process of search for the solution a number of research papers on robot architectures were explored.
 
+<details>
+  <summary>If you're interested, here are sources, excerpts and conclusions on which we built this architecture</summary>
+
 ### ALFA - a language for action
 
 > Gat, E., 1991. ALFA: a language for programming reactive robotic control systems, in: Proceedings. 1991 IEEE International Conference on Robotics and Automation. Presented at the 1991 IEEE International Conference on Robotics and Automation, IEEE Comput. Soc. Press, Sacramento, CA, USA, pp. 1116–1121. https://doi.org/10.1109/ROBOT.1991.131743
@@ -62,6 +65,8 @@ In the process of a research following statements, regarding our application of 
 1. **Control system should be heterogeneous.** There is no benefit to restrict ourselves to singular code structure to perform different task, such as debug logging, managing user input and fast servo control. Each task should be managed by it's own code.
 2. **Control system should be asynchronous.** Slow computations should be performed in parallel with fast ones to allow fast reaction to contingencies.
 3. **Control system should be designed bottom up.**
+
+</details>
 
 ## Control system overview
 
