@@ -107,6 +107,11 @@ To ensure Channel write safety Channels divided into "Write groups", each corres
 
 Each Module can belong to only a single Write group.
 
+Also, no matter what, only one write per iteration is allowed to the given channel. So Module could read and write to the same Channel, only and only if this Module is the only one writing to the Channel.
+
+#### Digression
+To be able to quickly modify the code in the future, any Module can be replaced with a similar Module with modified logic or Selector, provided that its output Channels AT LEAST contain Channels of the original Module
+
 ### Selector
 
 Selector is a special type of Module. It can't perform calculations on its own, however it can contain a group of Modules, belonging to the same Write group. Also Selector has control Channel, which is used to select which Module should be in use at any given time.
