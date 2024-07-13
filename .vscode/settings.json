@@ -2,6 +2,7 @@
   "editor.formatOnSave": true,
   "files.associations": {
     "pinconfigured.h": "c",
-    "variant.h": "c"
+    "variant.h": "c",
+    "string_view": "cpp"
   }
 }

@@ -1,45 +1,40 @@
 #include <Arduino.h>
-#include <SPI.h>
-#include <Wire.h>
+#include "..\lib\tools\macros\communication_channel_access_macros.h"
 
-#include <SimpleFOC.h>
-#include <SimpleFOCDrivers.h>
+// Variable initialization
+volatile int something = 0;     // Example variable
+volatile float something1 = 0;  // Example variable
 
-// This includes the target selected by the PIO build environment
-// The include error can be dismissed until we find a fix for the dev env.
-#include "bootloaderTools.h"
-#include "target.h"
+CHANNEL_WRITE_ACCESS(something, AccessKey::KEY_1, KEY_3);
+CHANNEL_WRITE_ACCESS(something1, KEY_3);
 
-#ifdef TARGET_CLN17_V1_5
-#warning "Target: CLN17 v1.5 not yet implemented"
-#endif
-
-#ifdef TARGET_CLN17_V2_0
-#warning "Target: CLN17 v2 not yet implemented"
-#endif
-
+// Main program
 void setup() {
-  SerialUSB.begin(115200);
-  pinMode(PINOUT::LED_GRN, OUTPUT);
-  pinMode(PINOUT::LED_RED, OUTPUT);
-  pinMode(PINOUT::LED_BLU, OUTPUT);
+  // Initialize serial communication
+  SerialUSB.begin(9600);
 
-  // Initialize LEDs
-  digitalWrite(PINOUT::LED_GRN, HIGH);
-  digitalWrite(PINOUT::LED_RED, HIGH);
-  digitalWrite(PINOUT::LED_BLU, HIGH);
+  // Set access levels
+
+  // Attempt to read and write with different access levels
+  int read_value = CHANNEL_READ(something);
+  SerialUSB.println(read_value);  // Should print initial value
+
+  CHANNEL_WRITE(something, 42, KEY_1);  // Should succeed
+  read_value = CHANNEL_READ(something);
+  SerialUSB.println(read_value);  // Should print 42
+
+  // CHANNEL_WRITE(something, 84, LEVEL_2); // Should fail with compile-time
+  // error
+  CHANNEL_WRITE(something1, 126, GOD_MODE);  // Should succeed
+  CHANNEL_WRITE(something1, 126, KEY_3);   // Should succeed
+
+  CHANNEL_WRITE(something, 126, KEY_1);  // Should succeed
+
+  CHANNEL_WRITE(something, 126, GOD_MODE);  // Should succeed
+  read_value = CHANNEL_READ(something);
+  SerialUSB.println(read_value);  // Should print 126
 }
 
 void loop() {
-  // Jump to bootloader if 'b' is received
-  if (SerialUSB.available() > 0) {
-    char receivedChar = SerialUSB.read();
-    if (receivedChar == 'b') {
-      JumpToBootloader();
-    }
-  }
-
-  SerialUSB.println("Hello World!");
-  digitalToggle(PINOUT::LED_GRN);
-  delay(100);
+  // Empty loop
 }
