@@ -11,18 +11,24 @@
 #define GENERIC_MODULES_H
 
 #include <inttypes.h>
+#include "..\tools\macros\communication_channel_macros.h"
+#include "..\tools\macros\module_channel_macros.h"
 
 // ################### INTERUPTS CONTROL #################################
 
 /**
  * @brief Enables IRQ (Interrupt Requests).
  */
-void enable_IRQ();
+void enable_IRQ() {
+
+}
 
 /**
  * @brief Disables IRQ (Interrupt Requests).
  */
-void disable_IRQ();
+void disable_IRQ() {
+  
+}
 
 // ################### GENERIC MODULE #################################
 
@@ -38,8 +44,6 @@ class Module {
  public:
   /**
    * @brief Pure virtual function of Module callback.
-   *
-   * This function should be implemented by derived classes.
    */
   virtual void tick() = 0;
 };
@@ -76,7 +80,7 @@ class ComputeModule : public Module {
    * @brief Executes the read-compute-write cycle.
    * Disables IRQs during read and write operations to ensure data integrity.
    */
-  void tick() override {
+  void tick() override final {
     disable_IRQ();
     read();
     enable_IRQ();
@@ -92,7 +96,6 @@ class ComputeModule : public Module {
 /**
  * @brief Interface for modules that allow switching between different
  operational modes.
-
  * The SelectorModule class is a specialized type of Module that allows discrete
  changes
  * in system behavior by switching between Modules that share the same output
@@ -107,10 +110,8 @@ class SelectorModule : public Module {
 
   /**
    * @brief Selects the active internal Module.
-   *
    * This function must be implemented by derived classes to determine the
    * active module based on the selectorChannel value.
-   *
    * @return Pointer to the selected Module.
    */
   virtual Module* Select() = 0;
@@ -118,7 +119,6 @@ class SelectorModule : public Module {
  public:
   /**
    * @brief Constructor for SelectorModule.
-   *
    * @param Channel Reference to an integer variable used for selecting the
    * module.
    */

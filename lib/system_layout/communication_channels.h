@@ -90,7 +90,6 @@ CHANNEL_INIT_DEFAULT(int32_t, ROTOR_COS, 0)
 
 // Converts dq → αβ Voltage using encoder data
 CHANNEL_INIT_DEFAULT(int32_t, VOLTG_SIN_REF, 0)
-CHANNEL_INIT_DEFAULT(int32_t, VOLTG_D_ADJ, 0)
 CHANNEL_INIT_DEFAULT(int32_t, VOLTG_COS_REF, 0)
 
 // Converts αβ Current → dq Current using encoder data
@@ -136,28 +135,23 @@ CHANNEL_INIT_DEFAULT(int32_t, CURNT_IDLE, 0)
 // Converts required motion profile to instant accel/speed/position
 CHANNEL_INIT_DEFAULT(int32_t, SPEED_TARG, 0)
 CHANNEL_INIT_DEFAULT(int64_t, TRANSL_TARG, 0)
-CHANNEL_INIT_DEFAULT(int32_t, ACCEL_TARG, 0)
+CHANNEL_INIT(int32_t, ACCEL_TARG, 0)
 CHANNEL_INIT_DEFAULT(int64_t, TIME, 0)
 CHANNEL_INIT_DEFAULT(int64_t, POSITION_REF, 0)
-CHANNEL_INIT_DEFAULT(int32_t, ACCEL_REF, 0)
+CHANNEL_INIT(int32_t, ACCEL_REF, 0)
 CHANNEL_INIT_DEFAULT(int32_t, JERK_TARG, 0)
+
 
 // Regulates torque required to achieve desired acceleration
 CHANNEL_INIT_DEFAULT(int32_t, MOTOR_INERTIA, 0)
 
 // Regulates speed required to achieve desired position without saturation
-CHANNEL_INIT_DEFAULT(int64_t, POSITION_REF, 0)
 
 // Additional variables from the diagram:
 CHANNEL_INIT_DEFAULT(int32_t, MSTEP_SIZE, 0)
 CHANNEL_INIT_DEFAULT(int32_t, PWM_RESOL, 0)
 CHANNEL_INIT_DEFAULT(int32_t, CURNT_RUN, 0)
-CHANNEL_INIT_DEFAULT(int32_t, MOTOR_INERTIA, 0)
-CHANNEL_INIT_DEFAULT(int32_t, MOTOR_KT, 0)
-CHANNEL_INIT_DEFAULT(int32_t, MOTOR_KV, 0)
-CHANNEL_INIT_DEFAULT(int32_t, MOTOR_RESIST, 0)
-CHANNEL_INIT_DEFAULT(int32_t, MOTOR_CURNT, 0)
-CHANNEL_INIT_DEFAULT(int64_t, ROTOR_OFST, 0)
+
 }  // namespace TUNEPULSE_CHANNELS
 
 #endif  // COMMUNICATION_CHANNELS_H
