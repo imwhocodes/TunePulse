@@ -1,0 +1,54 @@
+direction : up
+
+Tickable: {
+    shape: class
+
+    tick() = 0: void
+}
+
+Block: {
+    shape: class
+    out: const &
+    xxx
+    tick() = 0: void
+}
+
+Block -> Tickable
+
+WriteGroupXXX: {
+    shape: class
+
+    - read() = 0: void
+    - compute() = 0: void
+    - write(): void
+    + tick(): void
+}
+
+WriteGroupXXX -> Tickable
+
+Selector: {
+    shape: class
+
+    - moduleList: "Module[]"
+    + moduleEnum
+    - read(): void
+    - compute(): void
+    - write(): void
+    + tick(): void
+}
+
+Selector -> WriteGroupXXX
+
+Module:{
+    shape: class
+
+    - read() = 0: void
+    - compute() = 0: void
+    - write() = 0: void
+    + tick(): void
+}
+
+Module -> WriteGroupXXX
+
+
+
