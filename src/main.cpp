@@ -3,74 +3,50 @@
 #include "..\lib\tools\macros\communication_channel_macros.h"
 
 // Variable initialization
-#include "..\modules\regulator_pid_ff.h"
+#include "..\blocks\regulator_pid_feedforward.h"
+#include "SPI.h"
 
-CHANNEL_INIT_DEFAULT(volatile int, something, 10);
-CHANNEL_INIT_DEFAULT(volatile int, something1, 11);
+struct MyClassParams {
+  int param1;
+  float param2;
+  bool param3;
 
-CHANNEL_WRITE_ACCESS(something, AccessKey::KEY_1, KEY_3);
-CHANNEL_WRITE_ACCESS(something1, KEY_3);
+  // Constructor to enforce initialization
+  MyClassParams(int p1, float p2, bool p3)
+      : param1(p1), param2(p2), param3(p3) {}
+};
 
-namespace fdf {
-CHANNEL_INIT_DEFAULT(volatile int, myVar, 10);
-}  // namespace fdf
+// Usage example
+int32_t in_actual = 0;
+int32_t in_reference = 1000;
+int32_t in_feedforward = 500;
+int32_t in_Kp = 1000;
+int32_t in_Ki = 500;
+int32_t in_Kd = 100;
+int32_t in_Kff = 200;
+int32_t in_output_limit = 10000;
+int32_t out_value;
+int32_t out_error;
 
-CHANNEL_INIT(volatile int, tryCombo, 10, KEY_1, KEY_2)
-
-PID_FF pid =
-    PID_FF(TUNEPULSE_CHANNELS::ACCEL_REF, TUNEPULSE_CHANNELS::ACCEL_TARG);
+INIT_REGULATOR_PID_FF(myPIDController,
+                      in_reference,
+                      in_feedforward,
+                      in_actual,
+                      in_Kp,
+                      in_Ki,
+                      in_Kd,
+                      in_Kff,
+                      in_output_limit);
 
 void setup() {
-  // Initialize serial communication
-  bool isDefault = CHANNEL_IS_DEFAULT(fdf::myVar);
-  CHANNEL_SET_DEFAULT(fdf::myVar);
-
-  SerialUSB.begin();
-
-  delay(2500);
-
-  CHANNEL_WRITE(TUNEPULSE_CHANNELS::ACCEL_REF, 12222, GOD_MODE);
-
-  SerialUSB.println(TUNEPULSE_CHANNELS::ACCEL_REF);
-
-  pid.tick();
-
-
-  SerialUSB.println(TUNEPULSE_CHANNELS::ACCEL_TARG);
-
-  // Set access levels
-
-  // // Attempt to read and write with different access levels
-  //  read_value = CHANNEL_READ(something);
-  // SerialUSB.println(read_value);  // Should print initial value
-
-  // // Attempt to read and write with different access levels
-  // read_value = CHANNEL_IS_DEFAULT(something);
-  // SerialUSB.println(read_value);  // Should print initial value
-
-  // CHANNEL_WRITE(something, 42, KEY_1);  // Should succeed
-  // read_value = CHANNEL_READ(something);
-  // SerialUSB.println(read_value);  // Should print 42
-
-  //   // Attempt to read and write with different access levels
-  // read_value = CHANNEL_IS_DEFAULT(something);
-  // SerialUSB.println(read_value);  // Should print initial value
-
-  // // CHANNEL_WRITE(something, 84, LEVEL_2); // Should fail with compile-time
-  // // error
-  // CHANNEL_WRITE(something1, 126, GOD_MODE);  // Should succeed
-  // CHANNEL_WRITE(something1, 126, KEY_3);   // Should succeed
-
-  // CHANNEL_WRITE(something, 126, KEY_1);  // Should succeed
-
-  // CHANNEL_WRITE(something, 126, GOD_MODE);  // Should succeed
-  // SerialUSB.println(CHANNEL_READ(something));  // Should print 126
-
-  // // Attempt to read and write with different access levels
-  // CHANNEL_SET_DEFAULT(something);
-  // SerialUSB.println(CHANNEL_READ(something));  // Should print initial value
+  SerialUSB.begin(9600);
+  while (!SerialUSB) {
+    ;  // wait for SerialUSB port to connect
+  }
+  myPIDController.tick();
+  SerialUSB.println("PID Controller Initialized");
 }
 
 void loop() {
-  // Empty loop
+  delay(1000);  // Delay for 1 second
 }
