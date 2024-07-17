@@ -1,8 +1,8 @@
 #ifndef BLOCK_LIB_H
 #define BLOCK_LIB_H
 
-#include "regulator_pid_feedforward.h"
-
+#include "controller_pid_feedforward.h"
+#include "math_rotate_vector_sin_cos.h"
 
 
 
