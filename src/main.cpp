@@ -1,46 +1,60 @@
 #include <Arduino.h>
-#include "..\lib\tools\macros\communication_channel_macros.h"
 
-// Variable initialization
-#include "..\blocks\blocks_lib.h"
+class Block {
+public:
+  virtual void tick() = 0;
+};
 
-// Global variables for the integrator input and output
+#define BLOCK_INPUT(type, name) \
+  protected:                     \
+  const type& name##_;
+
+#define BLOCK_OUTPUT(type, name) \
+  protected:                     \
+  type name##_;                  \
+  public:                        \
+    const type& get_##name() const { return name##_; }
+
+class RotateCoordinates : public Block {
+  BLOCK_INPUT(float, input_sin);
+  BLOCK_INPUT(float, input_cos);
+  BLOCK_INPUT(float, rotation_sin);
+  BLOCK_INPUT(float, rotation_cos);
+  BLOCK_OUTPUT(float, output_sin);
+  BLOCK_OUTPUT(float, output_cos);
+
+public:
+  RotateCoordinates(const float& input_sin,
+                    const float& input_cos,
+                    const float& rotation_sin,
+                    const float& rotation_cos)
+      : input_sin_(input_sin), input_cos_(input_cos),
+        rotation_sin_(rotation_sin), rotation_cos_(rotation_cos) {}
+
+  void tick() override {
+    output_sin_ = input_sin_ * rotation_cos_ + input_cos_ * rotation_sin_;
+    output_cos_ = input_cos_ * rotation_cos_ - input_sin_ * rotation_sin_;
+  }
+};
+
 float input_sin = 0.0f, input_cos = 1.0f, rotation_sin = 0.707f, rotation_cos = 0.707f;
 
-// Create instances of the classes
-MathRotateVectorSinCos rotate1(input_sin, input_cos, rotation_sin, rotation_cos);
-MathRotateVectorSinCos rotate2(rotate1.output_sin, rotate1.output_cos, rotation_sin, rotation_cos);
-
+RotateCoordinates rotate1(input_sin, input_cos, rotation_sin, rotation_cos);
+RotateCoordinates rotate2(rotate1.get_output_sin(), rotate1.get_output_cos(), rotation_sin, rotation_cos);
 
 void setup() {
-  // Initialize serial communication
-  SerialUSB.begin();
+  SerialUSB.begin(9600);
   while (!SerialUSB);
 
   SerialUSB.println("Rotation Example");
-}
 
-void loop() {
-  // Perform rotation 45deg
   rotate1.tick();
-  // Perform another rotation 45deg
   rotate2.tick();
 
-      // Print results
-  SerialUSB.print("Sin1: ");
-  SerialUSB.println(rotate1.output_sin);
-  SerialUSB.print("Cos1: ");
-  SerialUSB.println(rotate1.output_cos);
-
-  // Print results
-  SerialUSB.print("Sin2: ");
-  SerialUSB.println(rotate2.output_sin);
-  SerialUSB.print("Cos2: ");
-  SerialUSB.println(rotate2.output_cos);
-
-  input_sin = rotate2.output_sin;
-  input_cos = rotate2.output_cos;
-
-  // Simulate a delay for demonstration purposes
-  delay(1000);
+  SerialUSB.print("Sin: ");
+  SerialUSB.println(rotate2.get_output_sin());
+  SerialUSB.print("Cos: ");
+  SerialUSB.println(rotate2.get_output_cos());
 }
+
+void loop() {}

@@ -53,13 +53,13 @@ Internal input and output variables are created using the macros `BLOCK_INPUT(ty
   type name##_;                   \
                                   \
   public:                         \
-  const type& name = name##_;
+  const type& get_##name() const { return name##_; }
   ```
 </details>
 
 These macros create variables by adding `_` at the end. For example:
 - `BLOCK_INPUT(int32_t, input)` will create a protected const reference `input_` which can be used in the implementation of the `tick()` method.
-- `BLOCK_OUTPUT(int32_t, output)` will create a variable `output_` which can be used in the implementation of the `tick()` method. It will also create a public const `output` reference to the `output_` variable.
+- `BLOCK_OUTPUT(int32_t, output)` will create a variable `output_` which can be used in the implementation of the `tick()` method. It will also create a public const `get_output()` method that returns reference to the `output_` variable.
 > It is important that all internal variables have the postfix `_`.
 
 Local variables used for calculations should be private or protected.
@@ -70,7 +70,7 @@ Thus, each derived class contains:
 - `public`:
     - `Constructor`
     - `tick()`
-    - `const link` to `Output Data Channels` (created automatically by the macro)
+    - `get_[var name]()` const reference `to` Output Data Channels` (created automatically by the macro)
 - `protected`:
     - `const link` to `Input Data Channels` (created automatically by the macro)
     - `output variables`
@@ -161,7 +161,7 @@ float input_sin = 0.0f, input_cos = 1.0f, rotation_sin = 0.707f, rotation_cos = 
 
 // Create instances of the classes
 RotateCoordinates rotate1(input_sin, input_cos, rotation_sin, rotation_cos);
-RotateCoordinates rotate2(rotate1.output_sin, rotate1.output_cos, rotation_sin, rotation_cos);
+RotateCoordinates rotate2(rotate1.get_output_sin(), rotate1.get_output_cos(), rotation_sin, rotation_cos);
 
 void setup() {
   // Initialize serial communication
@@ -178,9 +178,9 @@ void setup() {
 
   // Print results
   Serial.print("Sin: ");
-  Serial.println(rotate2.output_sin);
+  Serial.println(rotate2.get_output_sin());
   Serial.print("Cos: ");
-  Serial.println(rotate2.output_cos);
+  Serial.println(rotate2.get_output_cos());
 }
 
 void loop() {}

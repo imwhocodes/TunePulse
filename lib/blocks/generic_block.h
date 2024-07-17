@@ -35,7 +35,7 @@
   type name##_;                  \
                                  \
  public:                         \
-  const type& name = name##_;
+    const type& get_##name() const { return name##_; }
 
 // ################### GENERIC BLOCK #################################
 
