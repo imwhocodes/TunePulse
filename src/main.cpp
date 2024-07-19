@@ -1,60 +1,82 @@
 #include <Arduino.h>
+#include "blocks_lib.h"
 
-class Block {
-public:
-  virtual void tick() = 0;
-};
+// Initial channel values for each selector instance
+int32_t channels0[4] = {1000, 2000, 3000, 4000};
 
-#define BLOCK_INPUT(type, name) \
-  protected:                     \
-  const type& name##_;
 
-#define BLOCK_OUTPUT(type, name) \
-  protected:                     \
-  type name##_;                  \
-  public:                        \
-    const type& get_##name() const { return name##_; }
+PatternPWM mode = ABCD;  // Select the mode
 
-class RotateCoordinates : public Block {
-  BLOCK_INPUT(float, input_sin);
-  BLOCK_INPUT(float, input_cos);
-  BLOCK_INPUT(float, rotation_sin);
-  BLOCK_INPUT(float, rotation_cos);
-  BLOCK_OUTPUT(float, output_sin);
-  BLOCK_OUTPUT(float, output_cos);
+// Create 10 instances of SelectorInterconnectPwm4ch
+static SelectorInterconnectPwm4ch selector0(mode, channels0);
 
-public:
-  RotateCoordinates(const float& input_sin,
-                    const float& input_cos,
-                    const float& rotation_sin,
-                    const float& rotation_cos)
-      : input_sin_(input_sin), input_cos_(input_cos),
-        rotation_sin_(rotation_sin), rotation_cos_(rotation_cos) {}
 
-  void tick() override {
-    output_sin_ = input_sin_ * rotation_cos_ + input_cos_ * rotation_sin_;
-    output_cos_ = input_cos_ * rotation_cos_ - input_sin_ * rotation_sin_;
-  }
-};
-
-float input_sin = 0.0f, input_cos = 1.0f, rotation_sin = 0.707f, rotation_cos = 0.707f;
-
-RotateCoordinates rotate1(input_sin, input_cos, rotation_sin, rotation_cos);
-RotateCoordinates rotate2(rotate1.get_output_sin(), rotate1.get_output_cos(), rotation_sin, rotation_cos);
+uint32_t tickCount = 0;  // Counter for the number of ticks
+int32_t outputValues[4];  // Array to store output values
 
 void setup() {
-  SerialUSB.begin(9600);
-  while (!SerialUSB);
+  SerialUSB.begin();
+  delay(1000);
 
-  SerialUSB.println("Rotation Example");
-
-  rotate1.tick();
-  rotate2.tick();
-
-  SerialUSB.print("Sin: ");
-  SerialUSB.println(rotate2.get_output_sin());
-  SerialUSB.print("Cos: ");
-  SerialUSB.println(rotate2.get_output_cos());
+  // Enable DWT and the cycle counter
+  if (!(CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk)) {
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->CYCCNT = 0;
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+  }
 }
 
-void loop() {}
+void loop() {
+  // Start cycle count
+  uint32_t startTickTime = DWT->CYCCNT;
+
+  // Update the channel pointers for all selector instances based on the mode
+  selector0.tick();
+
+  // Example: Print the output values of selector0
+  outputValues[0] = selector0.getPwmChannels()[0];
+  outputValues[1] = selector0.getPwmChannels()[1];
+  outputValues[2] = selector0.getPwmChannels()[2];
+  outputValues[3] = selector0.getPwmChannels()[3];
+    // End cycle count
+  uint32_t endTickTime = DWT->CYCCNT;
+
+
+  // Calculate the time taken for the tick and array access in clock cycles
+  uint32_t tickDuration = endTickTime - startTickTime;
+
+  // Print the tick duration in clock cycles
+  SerialUSB.print("Tick duration: ");
+  SerialUSB.print(tickDuration);
+  SerialUSB.println(" clock cycles");
+
+  // Print the new array
+  for (int i = 0; i < 4; ++i) {
+    SerialUSB.print(outputValues[i]);
+    SerialUSB.print(" ");
+  }
+  SerialUSB.println();
+
+  tickCount++;
+
+  // Change mode every 5 cycles
+  if (tickCount % 2 == 0) {
+    constexpr PatternPWM patterns[] = {
+        PatternPWM::ABCD,
+        PatternPWM::ACDB,
+        PatternPWM::ADBC,
+        PatternPWM::DCAB
+    };
+    mode = patterns[(tickCount / 2) & 4];
+    SerialUSB.print("Mode changed to: ");
+    SerialUSB.println(mode);
+    delay(1000);
+  }
+
+  // Increment channel values for all selector instances
+  for (int i = 0; i < 4; ++i) {
+    channels0[i]++;
+  }
+
+  delay(100);  // Wait for 100 milliseconds before the next iteration
+}
