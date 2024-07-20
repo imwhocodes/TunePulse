@@ -9,3 +9,7 @@ build/
 .vscode/ipch
 
 private/
+.idea/.gitignore
+.idea/modules.xml
+.idea/TunePulse.iml
+.idea/vcs.xml
