@@ -12,9 +12,7 @@
 #include "generic_block.h"
 
 // Uncomment this line to optimize for speed - not recommended
-// #define SPEED_OPTIMIZED
-
-#ifndef SPEED_OPTIMIZED_PWM_MUX
+// #define SPEED_OPTIMIZED_PWM_MUX
 
 enum PatternPWM : uint8_t {
   ABCD = 0b11100100,  // Pattern 0: {0, 1, 2, 3}
@@ -23,13 +21,14 @@ enum PatternPWM : uint8_t {
   DCAB = 0b01001011   // Pattern 3: {3, 2, 0, 1}
 };
 
+#ifndef SPEED_OPTIMIZED_PWM_MUX
+
 class SelectorInterconnectPwm4ch {
  private:
-  const int32_t (
-      &chABCD)[4];       ///< Reference to input array containing PWM channels.
-  const PatternPWM& mode_;  ///< Reference to the current mode.
+  const int32_t (&chABCD)[4];  // Ref to array containing ABCD PWM channels.
+  const PatternPWM& mode_;     // Reference to the current mode
   int32_t output[4] = {
-      INT32_MIN};  ///< Array to store the current output pattern.
+      INT32_MIN};  // Array to store the current output pattern.
 
  public:
   /**
@@ -45,9 +44,8 @@ class SelectorInterconnectPwm4ch {
    * @brief Updates the output pattern based on the current mode.
    */
   void tick() {
-    for (uint8_t i = 0; i < 4; i++) {
-      output[i] = chABCD[mode_>>(2*i) & 0b11];
-    }
+    for (uint8_t i = 0; i < 4; i++)
+      output[i] = chABCD[mode_ >> (i * 2) & 0b11];
   }
 
   /**
@@ -57,25 +55,14 @@ class SelectorInterconnectPwm4ch {
   constexpr const int32_t (&getPwmChannels() const)[4] { return output; }
 };
 
-// enum PatternPWM : uint8_t {
-//   ABCD = 0b11100100,  // Pattern 0: {0, 1, 2, 3}
-//   ACDB = 0b01111000,  // Pattern 1: {0, 2, 3, 1}
-//   ADBC = 0b10011100,  // Pattern 2: {0, 3, 1, 2}
-//   DCAB = 0b01001011   // Pattern 3: {3, 2, 0, 1}
-// };
+#else  // SPEED_OPTIMIZED_PWM_MUX
 
 // class SelectorInterconnectPwm4ch {
 //  private:
-//   const int32_t (
-//       &chABCD)[4];       ///< Reference to input array containing PWM channels.
-//   const uint8_t& mode_;  ///< Reference to the current mode.
-//   static constexpr uint32_t pattern =
-//       uint32_t(PatternPWM::ABCD)           // ABCD mode
-//       | uint32_t(PatternPWM::ACDB) << 8    // ACDB mode
-//       | uint32_t(PatternPWM::ADBC) << 16   // ADBC mode
-//       | uint32_t(PatternPWM::DCAB) << 24;  // DCAB mode
-//   int32_t output[4] = {
-//       INT32_MIN};  ///< Array to store the current output pattern.
+//   const int32_t (&chABCD)[4];  // Ref to array containing ABCD PWM channels.
+//   const PatternPWM& mode_;     // Reference to the current mode
+//   PatternPWM previous_mode_ = ABCD;  // Reference to the current mode
+//   const int32_t* pattern[4];  // Array to store the current output pattern.
 
 //  public:
 //   /**
@@ -83,18 +70,22 @@ class SelectorInterconnectPwm4ch {
 //    * @param mode Reference to the current mode.
 //    * @param inputArray Reference to the input array containing PWM channels.
 //    */
-//   constexpr SelectorInterconnectPwm4ch(const uint8_t& mode,
+//   constexpr SelectorInterconnectPwm4ch(const PatternPWM& mode,
 //                                        const int32_t (&inputArray)[4])
-//       : mode_(mode), chABCD(inputArray) {}
+//       : mode_(mode),
+//         chABCD(inputArray),
+//         pattern(
+//             {&inputArray[0], &inputArray[1], &inputArray[2], &inputArray[3]})
+//             {}
 
 //   /**
 //    * @brief Updates the output pattern based on the current mode.
 //    */
 //   void tick() {
-//     uint32_t currentPattern = pattern >> 8 * (mode_ % 4);
-//     for (uint8_t i = 0; i < 4; ++i) {
-//       output[i] = chABCD[currentPattern & 0b11];
-//       currentPattern >>= 2;
+//     if (previous_mode_ != mode_) {
+//       for (int8_t i = 0; i != 4; i++)
+//         pattern[i] = &chABCD[mode_ >> (i * 2) & 0b11];
+//       previous_mode_ = mode_;
 //     }
 //   }
 
@@ -102,11 +93,8 @@ class SelectorInterconnectPwm4ch {
 //    * @brief Returns the current PWM channels.
 //    * @return Reference to the array of current PWM channels.
 //    */
-//   constexpr const int32_t (&getPwmChannels() const)[4] { return output; }
+//   const int32_t* const (&getPwmChannels() const)[4] { return pattern; }
 // };
-
-
-#else  // SPEED_OPTIMIZED_PWM_MUX
 
 /**
  * @class SelectorInterconnectPwm4ch

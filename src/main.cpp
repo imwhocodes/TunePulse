@@ -1,82 +1,74 @@
 #include <Arduino.h>
 #include "blocks_lib.h"
 
-// Initial channel values for each selector instance
-int32_t channels0[4] = {1000, 2000, 3000, 4000};
+MotorType motor_type = STEPPER;
+PatternPWM pattern_pwm = ABCD;
 
+int32_t sup_vltg = 200; // not done yet
 
-PatternPWM mode = ABCD;  // Select the mode
+int32_t alpha = 0;
+int32_t beta = 0;
 
-// Create 10 instances of SelectorInterconnectPwm4ch
-static SelectorInterconnectPwm4ch selector0(mode, channels0);
+SelectorMotorType motor_sel(motor_type, sup_vltg, alpha, beta);
+SelectorInterconnectPwm4ch pwm_mux(pattern_pwm, motor_sel.getPwmChannels());
 
-
-uint32_t tickCount = 0;  // Counter for the number of ticks
-int32_t outputValues[4];  // Array to store output values
+const float step = 0.05 * PI;  // шаг в 0.05 PI
+float angle = 0.0;
 
 void setup() {
-  SerialUSB.begin();
-  delay(1000);
-
-  // Enable DWT and the cycle counter
-  if (!(CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk)) {
-    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-    DWT->CYCCNT = 0;
-    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+  SerialUSB.begin();    // Инициализация SerialUSB
+  while (!SerialUSB) {  // Ждем подключения SerialUSB
+    ;
   }
+  
+  // Настройка частоты ШИМ на 30кГц для TIM2
+  analogWriteFrequency(30000);  // Устанавливаем частоту ШИМ на 30кГц
+
+  pinMode(PB2, OUTPUT);
+  pinMode(PA4, OUTPUT);
+
+    digitalWrite(PB2, HIGH);
+  digitalWrite(PA4, HIGH);
+
+  analogWriteResolution(12);
+
+
+
 }
 
 void loop() {
-  // Start cycle count
-  uint32_t startTickTime = DWT->CYCCNT;
+  motor_sel.tick();
+  pwm_mux.tick();
 
-  // Update the channel pointers for all selector instances based on the mode
-  selector0.tick();
+  // Генерация значений sin и cos с амплитудой 10000
+  alpha = int32_t(100 * sin(angle));
+  beta = int32_t(100 * cos(angle));
 
-  // Example: Print the output values of selector0
-  outputValues[0] = selector0.getPwmChannels()[0];
-  outputValues[1] = selector0.getPwmChannels()[1];
-  outputValues[2] = selector0.getPwmChannels()[2];
-  outputValues[3] = selector0.getPwmChannels()[3];
-    // End cycle count
-  uint32_t endTickTime = DWT->CYCCNT;
+  // Увеличиваем угол на шаг
+  angle += step;
 
-
-  // Calculate the time taken for the tick and array access in clock cycles
-  uint32_t tickDuration = endTickTime - startTickTime;
-
-  // Print the tick duration in clock cycles
-  SerialUSB.print("Tick duration: ");
-  SerialUSB.print(tickDuration);
-  SerialUSB.println(" clock cycles");
-
-  // Print the new array
-  for (int i = 0; i < 4; ++i) {
-    SerialUSB.print(outputValues[i]);
-    SerialUSB.print(" ");
-  }
-  SerialUSB.println();
-
-  tickCount++;
-
-  // Change mode every 5 cycles
-  if (tickCount % 2 == 0) {
-    constexpr PatternPWM patterns[] = {
-        PatternPWM::ABCD,
-        PatternPWM::ACDB,
-        PatternPWM::ADBC,
-        PatternPWM::DCAB
-    };
-    mode = patterns[(tickCount / 2) & 4];
-    SerialUSB.print("Mode changed to: ");
-    SerialUSB.println(mode);
-    delay(1000);
+  // Если угол больше 2*PI, сбрасываем его
+  if (angle >= 2 * PI) {
+    angle -= 2 * PI;
   }
 
-  // Increment channel values for all selector instances
-  for (int i = 0; i < 4; ++i) {
-    channels0[i]++;
-  }
+  // Вывод значений getPwmChannels() в SerialUSB
+  const int32_t* channels = pwm_mux.getPwmChannels();
+//   SerialUSB.print("PWM Channels: ");
+//   for (int i = 0; i < 4; ++i) {
+//     SerialUSB.print(channels[i]);
+//     if (i < 3) {
+//       SerialUSB.print(", ");
+//     }
+//   }
+//   SerialUSB.println();
 
-  delay(100);  // Wait for 100 milliseconds before the next iteration
+//   Настройка ШИМ сигналов на выводах PA0, PA1, PB10, PB11
+  analogWrite(PA0, channels[2]);
+  analogWrite(PA1, channels[3]);
+  analogWrite(PB11, channels[1]);
+  analogWrite(PB10, channels[0]);
+
+  // Добавляем задержку для контроля скорости выполнения цикла
+  delayMicroseconds(5000);  // задержка 100 мс
 }
