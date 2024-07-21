@@ -25,10 +25,10 @@ enum PatternPWM : uint8_t {
 
 class SelectorInterconnectPwm4ch {
  private:
-  const int32_t (&chABCD_)[4];  // Ref to array containing ABCD PWM channels.
+  const int16_t (&chABCD_)[4];  // Ref to array containing ABCD PWM channels.
   const PatternPWM& mode_;      // Reference to the current mode
-  int32_t output[4] = {
-      INT32_MIN};  // Array to store the current output pattern.
+  int16_t output[4] = {
+      INT16_MIN};  // Array to store the current output pattern.
 
  public:
   /**
@@ -37,7 +37,7 @@ class SelectorInterconnectPwm4ch {
    * @param inputArray Reference to the input array containing PWM channels.
    */
   constexpr SelectorInterconnectPwm4ch(const PatternPWM& mode,
-                                       const int32_t (&chABCD)[4])
+                                       const int16_t (&chABCD)[4])
       : mode_(mode), chABCD_(chABCD) {}
 
   /**
@@ -52,17 +52,17 @@ class SelectorInterconnectPwm4ch {
    * @brief Returns the current PWM channels.
    * @return Reference to the array of current PWM channels.
    */
-  constexpr const int32_t (&getPwmChannels() const)[4] { return output; }
+  constexpr const int16_t (&getPwmChannels() const)[4] { return output; }
 };
 
 #else  // SPEED_OPTIMIZED_PWM_MUX
 
 // class SelectorInterconnectPwm4ch {
 //  private:
-//   const int32_t (&chABCD_)[4];  // Ref to array containing ABCD PWM channels.
+//   const int16_t (&chABCD_)[4];  // Ref to array containing ABCD PWM channels.
 //   const PatternPWM& mode_;     // Reference to the current mode
 //   PatternPWM previous_mode_ = ABCD;  // Reference to the current mode
-//   const int32_t* pattern[4];  // Array to store the current output pattern.
+//   const int16_t* pattern[4];  // Array to store the current output pattern.
 
 //  public:
 //   /**
@@ -71,7 +71,7 @@ class SelectorInterconnectPwm4ch {
 //    * @param inputArray Reference to the input array containing PWM channels.
 //    */
 //   constexpr SelectorInterconnectPwm4ch(const PatternPWM& mode,
-//                                        const int32_t (&inputArray)[4])
+//                                        const int16_t (&inputArray)[4])
 //       : mode_(mode),
 //         chABCD_(inputArray),
 //         pattern(
@@ -93,7 +93,7 @@ class SelectorInterconnectPwm4ch {
 //    * @brief Returns the current PWM channels.
 //    * @return Reference to the array of current PWM channels.
 //    */
-//   const int32_t* const (&getPwmChannels() const)[4] { return pattern; }
+//   const int16_t* const (&getPwmChannels() const)[4] { return pattern; }
 // };
 
 /**
@@ -102,12 +102,12 @@ class SelectorInterconnectPwm4ch {
  */
 class SelectorInterconnectPwm4ch {
  private:
-  const int32_t (
+  const int16_t (
       &chABCD_)[4];  ///< Reference to input array containing PWM channels.
-  const int32_t*
+  const int16_t*
       pattern[4][4];  ///< Array of pointers to handle different patterns.
 
-  const int32_t** output;  ///< Pointer to the current output pattern.
+  const int16_t** output;  ///< Pointer to the current output pattern.
   const uint8_t& mode_;    ///< Reference to the current mode.
 
  public:
@@ -117,7 +117,7 @@ class SelectorInterconnectPwm4ch {
    * @param inputArray Reference to the input array containing PWM channels.
    */
   constexpr SelectorInterconnectPwm4ch(const uint8_t& mode,
-                                       const int32_t (&inputArray)[4])
+                                       const int16_t (&inputArray)[4])
       : mode_(mode),
         chABCD_(inputArray),
         pattern{{&chABCD_[0], &chABCD_[1], &chABCD_[2], &chABCD_[3]},
@@ -135,7 +135,7 @@ class SelectorInterconnectPwm4ch {
    * @brief Returns the current PWM channels.
    * @return Pointer to the array of current PWM channels.
    */
-  const int32_t* const* getPwmChannels() const { return output; }
+  const int16_t* const* getPwmChannels() const { return output; }
 };
 
 #endif  // SPEED_OPTIMIZED_PWM_MUX

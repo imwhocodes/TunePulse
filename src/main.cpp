@@ -7,14 +7,14 @@ MotorType motor_type = STEPPER;
 PatternPWM pattern_pwm = ABCD;
 ModePWM pwm_mode = ALLIGNED_GND;
 
-int32_t sup_vltg = 10000;           // not used yet
-int32_t pwm_resolution = 4096 * 2;  // not used yet
-int32_t motor_voltage = 1000;
+int16_t sup_vltg = 10000;           // not used yet
+int16_t pwm_resolution = 6000 * 2;  // not used yet
+int16_t motor_voltage = 100;
 
-int32_t alpha = 0;
-int32_t beta = 0;
+int16_t alpha = 0;
+int16_t beta = 0;
 
-SelectorMotorType motor_sel(motor_type, sup_vltg, alpha, beta);
+SelectorMotorType motor_sel(motor_type, sup_vltg, alpha, beta, INT16_MIN);
 SelectorInterconnectPwm4ch pwm_mux(pattern_pwm, motor_sel.getPwmChannels());
 ModuleDriverPWM pwm(pwm_mode,
                     pwm_resolution,
@@ -77,7 +77,7 @@ void MX_TIM2_Init(void) {
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_CENTERALIGNED1;
-  htim2.Init.Period = 4096;
+  htim2.Init.Period = 4000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK) {
@@ -119,7 +119,7 @@ void MX_TIM2_Init(void) {
   HAL_TIM_MspPostInit(&htim2);
 }
 
-void setPwm(const int32_t* pwmValues) {
+void setPwm(const int16_t* pwmValues) {
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, pwmValues[0]);
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, pwmValues[1]);
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, pwmValues[2]);
@@ -149,34 +149,40 @@ void setup() {
   digitalWrite(PB2, HIGH);
   digitalWrite(PA4, HIGH);
 
-  analogWriteResolution(12);
+  analogReadResolution(12);
 
   pinMode(PA2, INPUT_ANALOG);
 }
 
 
-const float step = 0.01 * PI;  // Step of 0.05 PI
+const float step = 0.025 * PI;  // Step of 0.05 PI
 float angle = 0.0;
 
 
 unsigned long previousMicros = 0;  // Store the last time the code was executed
 const unsigned long interval = 500;  // Interval in microseconds
 
+
 void loop() {
 
-
+  sup_vltg = analogRead(PA2);
   motor_sel.tick();
   pwm_mux.tick();
   pwm.tick();
 
+  SerialUSB.print("sup_vltg: ");
+  SerialUSB.print(sup_vltg);
+  SerialUSB.print("; alpha: ");
+  SerialUSB.print(alpha);
+  SerialUSB.print("; beta:");
+  SerialUSB.println(beta);
+
   setPwm(pwm.getPwmChannels());
-  // int32_t ch[4] = {0, 0 , 0, 0};
-  // setPwm(ch);
 
 
   // Generate sin and cos values with amplitude 10000
-  alpha = int32_t(motor_voltage * sin(angle));
-  beta = int32_t(motor_voltage * cos(angle));
+  alpha = int16_t(int32_t((int32_t(sin(angle) * 100) * motor_voltage) / sup_vltg));
+  beta = int16_t(int32_t((int32_t(cos(angle) * 100) * motor_voltage) / sup_vltg));
 
   // Increase the angle by step
   angle += step;
@@ -207,5 +213,5 @@ void loop() {
 //   SerialUSB.println();
 
   // Add a delay to control the loop execution speed
-  delayMicroseconds(10000);  // 5 ms delay
+  delayMicroseconds(50);  // 5 ms delay
 }
