@@ -1,28 +1,41 @@
 #include <Arduino.h>
 #include "blocks_lib.h"
+#include "bootloaderTools.h"
+#include "target.h"
 
 // Initial channel values for each selector instance
 int32_t channels0[4] = {1000, 2000, 3000, 4000};
-
 
 PatternPWM mode = ABCD;  // Select the mode
 
 // Create 10 instances of SelectorInterconnectPwm4ch
 static SelectorInterconnectPwm4ch selector0(mode, channels0);
 
-
-uint32_t tickCount = 0;  // Counter for the number of ticks
+uint32_t tickCount = 0;   // Counter for the number of ticks
 int32_t outputValues[4];  // Array to store output values
 
 void setup() {
   SerialUSB.begin();
   delay(1000);
 
+  // Initialize raw pins
+  pinMode(PINOUT::SYS_SW1, INPUT);
+  pinMode(PINOUT::LED_GRN, OUTPUT);
+  pinMode(PINOUT::LED_RED, OUTPUT);
+  pinMode(PINOUT::LED_BLU, OUTPUT);
+
   // Enable DWT and the cycle counter
   if (!(CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk)) {
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
     DWT->CYCCNT = 0;
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+  }
+
+  // Bootloader check
+  // Jump to bootloader if button is pressed during setup
+  if (digitalRead(PINOUT::SYS_SW1) == LOW) {
+    digitalWrite(PINOUT::LED_GRN, HIGH);  // green led = bootloader entry
+    JumpToBootloader();
   }
 }
 
@@ -38,9 +51,8 @@ void loop() {
   outputValues[1] = selector0.getPwmChannels()[1];
   outputValues[2] = selector0.getPwmChannels()[2];
   outputValues[3] = selector0.getPwmChannels()[3];
-    // End cycle count
+  // End cycle count
   uint32_t endTickTime = DWT->CYCCNT;
-
 
   // Calculate the time taken for the tick and array access in clock cycles
   uint32_t tickDuration = endTickTime - startTickTime;
@@ -61,12 +73,8 @@ void loop() {
 
   // Change mode every 5 cycles
   if (tickCount % 2 == 0) {
-    constexpr PatternPWM patterns[] = {
-        PatternPWM::ABCD,
-        PatternPWM::ACDB,
-        PatternPWM::ADBC,
-        PatternPWM::DCAB
-    };
+    constexpr PatternPWM patterns[] = {PatternPWM::ABCD, PatternPWM::ACDB,
+                                       PatternPWM::ADBC, PatternPWM::DCAB};
     mode = patterns[(tickCount / 2) & 4];
     SerialUSB.print("Mode changed to: ");
     SerialUSB.println(mode);
