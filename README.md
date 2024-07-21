@@ -23,10 +23,10 @@ Its primary goal is to advance the development of closed-loop systems and simpli
 
 - STMCubeProgrammer - https://www.st.com/en/development-tools/stm32cubeprog.html
 - VSCode - https://code.visualstudio.com
-- PlatformIO - (Install as VSCode extension, see image below)
+- PlatformIO - (Install as VSCode extension, see image below)  
   ![PIO Extension](./assets/PIO_Extension.png)
 
-### First Boot:
+### First Upload:
 
 To generate the binary, pull the TunePulse repository from github. Be sure to switch to a branch that has a bootloader available if you want to remove the programmer from the loop. Make sure the PlatformIO extension is installed for building.
 
@@ -40,7 +40,17 @@ To flash, open up STM32CubeProgrammer applciation. In the screenshot below, the 
 
 In this next menu, simply browse for your binary file from the path above, and click the Start Programming button. This should have properly flashed the device and you are all set for further testing.
 
-### Target defines
+### DFU from VSCode
+
+Once firmware with DFU boot is uploaded onto the device, the STLink programmer can be removed and you can connect directly over USB-C. This currently is set up to be triggered if the SW1 Button is held down during power up. If done correcly, the blue and green LEDs should be showing, and if you check the device manager on the computer it should have a `DFU in FS Mode` under the `Universal Serial Bus devices` as shown below.
+
+![DFU Boot in Device Manager](./assets/Device_Manager_DFU.png)
+
+Next in VSCode, we can set up flashing to this device with the command: `PlatformIO: Set Project Port (upload/monitor/test)`. By default, if there are no other devices, you will want to choose the option `Custom`, and enter `USB1`. This may be a higher USB number if you have multiple attached simultaneously. You can check what this is through the STM32CubeProgrammer if you choose the USB option of connecting, and refresh the port list.
+
+Once this is completed, simply running `PlatformIO: Upload` will upload the built code straight onto the device.
+
+## Target defines
 
 For specific targets:
 
