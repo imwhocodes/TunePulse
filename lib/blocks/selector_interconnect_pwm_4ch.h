@@ -25,8 +25,8 @@ enum PatternPWM : uint8_t {
 
 class SelectorInterconnectPwm4ch {
  private:
-  const int32_t (&chABCD)[4];  // Ref to array containing ABCD PWM channels.
-  const PatternPWM& mode_;     // Reference to the current mode
+  const int32_t (&chABCD_)[4];  // Ref to array containing ABCD PWM channels.
+  const PatternPWM& mode_;      // Reference to the current mode
   int32_t output[4] = {
       INT32_MIN};  // Array to store the current output pattern.
 
@@ -37,15 +37,15 @@ class SelectorInterconnectPwm4ch {
    * @param inputArray Reference to the input array containing PWM channels.
    */
   constexpr SelectorInterconnectPwm4ch(const PatternPWM& mode,
-                                       const int32_t (&inputArray)[4])
-      : mode_(mode), chABCD(inputArray) {}
+                                       const int32_t (&chABCD)[4])
+      : mode_(mode), chABCD_(chABCD) {}
 
   /**
    * @brief Updates the output pattern based on the current mode.
    */
   void tick() {
     for (uint8_t i = 0; i < 4; i++)
-      output[i] = chABCD[mode_ >> (i * 2) & 0b11];
+      output[i] = chABCD_[mode_ >> (i * 2) & 0b11];
   }
 
   /**
@@ -59,7 +59,7 @@ class SelectorInterconnectPwm4ch {
 
 // class SelectorInterconnectPwm4ch {
 //  private:
-//   const int32_t (&chABCD)[4];  // Ref to array containing ABCD PWM channels.
+//   const int32_t (&chABCD_)[4];  // Ref to array containing ABCD PWM channels.
 //   const PatternPWM& mode_;     // Reference to the current mode
 //   PatternPWM previous_mode_ = ABCD;  // Reference to the current mode
 //   const int32_t* pattern[4];  // Array to store the current output pattern.
@@ -73,7 +73,7 @@ class SelectorInterconnectPwm4ch {
 //   constexpr SelectorInterconnectPwm4ch(const PatternPWM& mode,
 //                                        const int32_t (&inputArray)[4])
 //       : mode_(mode),
-//         chABCD(inputArray),
+//         chABCD_(inputArray),
 //         pattern(
 //             {&inputArray[0], &inputArray[1], &inputArray[2], &inputArray[3]})
 //             {}
@@ -84,7 +84,7 @@ class SelectorInterconnectPwm4ch {
 //   void tick() {
 //     if (previous_mode_ != mode_) {
 //       for (int8_t i = 0; i != 4; i++)
-//         pattern[i] = &chABCD[mode_ >> (i * 2) & 0b11];
+//         pattern[i] = &chABCD_[mode_ >> (i * 2) & 0b11];
 //       previous_mode_ = mode_;
 //     }
 //   }
@@ -103,7 +103,7 @@ class SelectorInterconnectPwm4ch {
 class SelectorInterconnectPwm4ch {
  private:
   const int32_t (
-      &chABCD)[4];  ///< Reference to input array containing PWM channels.
+      &chABCD_)[4];  ///< Reference to input array containing PWM channels.
   const int32_t*
       pattern[4][4];  ///< Array of pointers to handle different patterns.
 
@@ -119,11 +119,11 @@ class SelectorInterconnectPwm4ch {
   constexpr SelectorInterconnectPwm4ch(const uint8_t& mode,
                                        const int32_t (&inputArray)[4])
       : mode_(mode),
-        chABCD(inputArray),
-        pattern{{&chABCD[0], &chABCD[1], &chABCD[2], &chABCD[3]},
-                {&chABCD[0], &chABCD[2], &chABCD[3], &chABCD[1]},
-                {&chABCD[0], &chABCD[3], &chABCD[1], &chABCD[2]},
-                {&chABCD[3], &chABCD[2], &chABCD[0], &chABCD[1]}},
+        chABCD_(inputArray),
+        pattern{{&chABCD_[0], &chABCD_[1], &chABCD_[2], &chABCD_[3]},
+                {&chABCD_[0], &chABCD_[2], &chABCD_[3], &chABCD_[1]},
+                {&chABCD_[0], &chABCD_[3], &chABCD_[1], &chABCD_[2]},
+                {&chABCD_[3], &chABCD_[2], &chABCD_[0], &chABCD_[1]}},
         output(pattern[0]) {}
 
   /**
