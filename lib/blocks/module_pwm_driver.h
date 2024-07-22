@@ -28,13 +28,8 @@ class ModuleDriverPWM {
   void tick() {
     for (uint8_t i = 0; i < 4; i++) {
       enb[i] = {bool(ch1234_[i] != INT16_MIN)};
-
-      duty[i] = (ch1234_[i] * pwm_res_) / sup_voltg_;
-      if (duty[i] > 0) duty[i]+=15;
-      if (duty[i] > pwm_res_)
-        duty[i] = pwm_res_;
-      // if (mode_ == ALLIGNED_VCC)
-      //   duty[i] = pwm_res_ - duty[i];
+      if (ch1234_[i] <= 0) duty[i] = 0;
+      else duty[i] = (ch1234_[i] * pwm_res_) / sup_voltg_;
     }
   }
 
