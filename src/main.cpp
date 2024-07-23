@@ -1,136 +1,90 @@
 #include <Arduino.h>
-#include "block_absolute_position.h"
+#include "blocks_lib.h"
+#include "bootloaderTools.h"
+#include "target.h"
 
-uint32_t angle_raw = 0;
+// Initial channel values for each selector instance
+int32_t channels0[4] = {1000, 2000, 3000, 4000};
 
-AbsPosition pos_offst(0, 0);
-int32_t frequency = 1;
-// Instantiate the BlockAbsolutePosition object
-BlockAbsolutePosition block(angle_raw, pos_offst, frequency);
+PatternPWM mode = ABCD;  // Select the mode
+
+// Create 10 instances of SelectorInterconnectPwm4ch
+static SelectorInterconnectPwm4ch selector0(mode, channels0);
+
+uint32_t tickCount = 0;   // Counter for the number of ticks
+int32_t outputValues[4];  // Array to store output values
 
 void setup() {
-  // Initialize SerialUSB at a baud rate of 115200
-  SerialUSB.begin(115200);
-  while (!SerialUSB) {
-    // Wait for SerialUSB to initialize
+  SerialUSB.begin();
+  delay(1000);
+
+  // Initialize raw pins
+  pinMode(PINOUT::SYS_SW1, INPUT);
+  pinMode(PINOUT::LED_GRN, OUTPUT);
+  pinMode(PINOUT::LED_RED, OUTPUT);
+  pinMode(PINOUT::LED_BLU, OUTPUT);
+
+  // Enable DWT and the cycle counter
+  if (!(CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk)) {
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->CYCCNT = 0;
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+  }
+
+  // Bootloader check
+  // Jump to bootloader if button is pressed during setup
+  if (digitalRead(PINOUT::SYS_SW1) == LOW) {
+    digitalWrite(PINOUT::LED_GRN, HIGH);  // green led = bootloader entry
+    JumpToBootloader();
   }
 }
 
-int32_t test = 0;
-
 void loop() {
-  // Simulate changing the angle_raw input
+  // Start cycle count
+  uint32_t startTickTime = DWT->CYCCNT;
 
-  test += 1 << 24 ;  // Increment angle for testing
-  angle_raw = test;
+  // Update the channel pointers for all selector instances based on the mode
+  selector0.tick();
 
-  // Call the tick method
-  block.tick();
+  // Example: Print the output values of selector0
+  outputValues[0] = selector0.getPwmChannels()[0];
+  outputValues[1] = selector0.getPwmChannels()[1];
+  outputValues[2] = selector0.getPwmChannels()[2];
+  outputValues[3] = selector0.getPwmChannels()[3];
+  // End cycle count
+  uint32_t endTickTime = DWT->CYCCNT;
 
-  // Read and print the position and speed 
-  int32_t angle = block.get_position_inst().split.angle;
-  int32_t rot = block.get_position_inst().split.rotations;
-  int64_t speed = block.get_speed_inst();
+  // Calculate the time taken for the tick and array access in clock cycles
+  uint32_t tickDuration = endTickTime - startTickTime;
 
-  // Print the values to SerialUSB
-  SerialUSB.print("Raw angle: ");
-  SerialUSB.print(angle_raw);
-  SerialUSB.print("; Angle: ");
-  SerialUSB.print(angle);
-  SerialUSB.print("; Rot: ");
-  SerialUSB.print(rot);
-  SerialUSB.print("; Speed: ");
-  SerialUSB.println(speed);
+  // Print the tick duration in clock cycles
+  SerialUSB.print("Tick duration: ");
+  SerialUSB.print(tickDuration);
+  SerialUSB.println(" clock cycles");
+
+  // Print the new array
+  for (int i = 0; i < 4; ++i) {
+    SerialUSB.print(outputValues[i]);
+    SerialUSB.print(" ");
+  }
   SerialUSB.println();
 
-  // Delay for a bit before the next loop iteration
-  delay(100);
+  tickCount++;
+
+  // Change mode every 5 cycles
+  if (tickCount % 2 == 0) {
+    constexpr PatternPWM patterns[] = {PatternPWM::ABCD, PatternPWM::ACDB,
+                                       PatternPWM::ADBC, PatternPWM::DCAB};
+    mode = patterns[(tickCount / 2) & 4];
+    SerialUSB.print("Mode changed to: ");
+    SerialUSB.println(mode);
+    delay(1000);
+  }
+
+  // Increment channel values for all selector instances
+  for (int i = 0; i < 4; ++i) {
+    channels0[i]++;
+  }
+
+  delay(100);  // Wait for 100 milliseconds before the next iteration
 }
-
-// #include <Arduino.h>
-// #include "blocks_lib.h"
-// #include "timerPWM.h"
-
-// // Variables for motor and PWM configuration
-// MotorType motor_type = STEPPER;
-// PatternPWM pattern_pwm = ABCD;
-// ModePWM pwm_mode = ALLIGNED_GND;
-
-// int16_t sup_vltg = 10000;           // not used yet
-// int16_t pwm_resolution = 4000;  // not used yet
-
-// int32_t motor_voltage_mvolt = 5000;
-
-// int32_t mot_voltg_adc = (motor_voltage_mvolt * 4096) / (3300 * 21);
-
-// int16_t motor_voltage = int16_t(mot_voltg_adc);
-
-// int16_t alpha = 0;
-// int16_t beta = 0;
-
-// SelectorMotorType motor_sel(motor_type, sup_vltg, alpha, beta, INT16_MIN);
-// SelectorInterconnectPwm4ch pwm_mux(pattern_pwm, motor_sel.getPwmChannels());
-// ModuleDriverPWM pwm(pwm_mode,
-//                     pwm_resolution,
-//                     sup_vltg,
-//                     pwm_mux.getPwmChannels());
-
-// void setup() {
-//   HAL_Init();
-//   // SystemClock_Config();
-//   MX_GPIO_Init();
-//   tim_pwm_init();
-
-//   SerialUSB.begin();    // Initialize SerialUSB
-//   while (!SerialUSB) {  // Wait for SerialUSB connection
-//     ;
-//   }
-//   SerialUSB.println("Ready!");
-
-//   pinMode(PB2, OUTPUT);
-//   pinMode(PA4, OUTPUT);
-
-//   digitalWrite(PB2, HIGH);
-//   digitalWrite(PA4, HIGH);
-
-//   analogReadResolution(12);
-
-//   pinMode(PA2, INPUT_ANALOG);
-// }
-
-// const float step = 0.15 * PI;  // Step of 0.05 PI
-// float angle = 0.0;
-
-// unsigned long previousMicros = 0;  // Store the last time the code was
-// executed const unsigned long interval = 500;  // Interval in microseconds
-
-// void loop() {
-//   sup_vltg = analogRead(PA2);
-//   motor_sel.tick();
-//   pwm_mux.tick();
-//   pwm.tick();
-
-//   setPwm(pwm.getPwmChannels());
-
-//   // Generate sin and cos values with amplitude 10000
-//   alpha = int16_t(sin(angle) * motor_voltage);
-//   beta = int16_t(cos(angle) * motor_voltage);
-
-//   // Increase the angle by step
-//   angle += step;
-
-//   // Reset the angle if it exceeds 2*PI
-//   if (angle >= 2 * PI) {
-//     angle -= 2 * PI;
-//   }
-
-//   // SerialUSB.print("Sup: ");
-//   // SerialUSB.print(sup_vltg);
-//   // SerialUSB.print("; PWM: ");
-//   // SerialUSB.print(pwm.getPwmChannels()[0]);
-//   //   SerialUSB.print("; ");
-//   // SerialUSB.println(pwm.getPwmChannels()[1]);
-
-//   // Add a delay to control the loop execution speed
-//   delayMicroseconds(100);  // 5 ms delay
-// }
