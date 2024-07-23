@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "blocks_lib.h"
+#include "current_sensors.h"
 #include "timerPWM.h"
 
 // Variables for motor and PWM configuration
@@ -7,7 +8,7 @@ MotorType motor_type = STEPPER;
 PatternPWM pattern_pwm = ABCD;
 ModePWM pwm_mode = ALLIGNED_GND;
 
-int16_t sup_vltg = 10000;           // not used yet
+int16_t sup_vltg = 10000;       // not used yet
 int16_t pwm_resolution = 4000;  // not used yet
 
 int32_t motor_voltage_mvolt = 5000;
@@ -26,11 +27,22 @@ ModuleDriverPWM pwm(pwm_mode,
                     sup_vltg,
                     pwm_mux.getPwmChannels());
 
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
+  if (htim->Instance == TIM2) {
+    // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
+    uint16_t current_sensor_A, current_sensor_B;
+    ADC1_Poll(&current_sensor_A, &current_sensor_B);
+  }
+}
+
 void setup() {
   HAL_Init();
   // SystemClock_Config();
-  MX_GPIO_Init();
-  tim_pwm_init();
+  MX_TIM2_Init();
+  HAL_TIM_Base_Start_IT(&htim2);
+  MX_TIM2_Start();
+
+  MX_ADC1_Init();
 
   SerialUSB.begin();    // Initialize SerialUSB
   while (!SerialUSB) {  // Wait for SerialUSB connection
@@ -61,7 +73,7 @@ void loop() {
   pwm_mux.tick();
   pwm.tick();
 
-  setPwm(pwm.getPwmChannels());
+  TIM2_Set_PWM_Values(pwm.getPwmChannels());
 
   // Generate sin and cos values with amplitude 10000
   alpha = int16_t(sin(angle) * motor_voltage);
