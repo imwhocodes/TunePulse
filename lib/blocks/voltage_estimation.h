@@ -24,15 +24,26 @@ class Voltage_Estimation : public Block {
   Voltage_Estimation(const int32_t& currentSinRef,
                      const int32_t& currentCosRef,
                      const int32_t& motorResistance,
-                     const int32_t& voltageSupply,
-                     const int32_t& voltageSin,
-                     const int32_t& voltageCos)
+                     const int32_t& voltageSupply)
       : currentSinRef_(currentSinRef),
         currentCosRef_(currentCosRef),
         motorResistance_(motorResistance),
-        voltageSupply_(voltageSupply),
-        voltageSin_(voltageSin),
-        voltageCos_(voltageCos) {}
+        voltageSupply_(voltageSupply) {}
+
+  /**
+   * @brief Updates voltage coltroller calculations
+   */
+  void tick() override;
 };
+
+void Voltage_Estimation::tick() {
+  voltageSin_ = currentSinRef_ * motorResistance_;
+  voltageCos_ = currentCosRef_ * motorResistance_;
+}
+
+#define INIT_VOLTAGE_ESTIMATION(instance_name, currentSinRef, currentCosRef, \
+                                motorResistance, voltageSupply)              \
+  Voltage_Estimation instance_name((currentSinRef), (currentCosRef),         \
+                                   (motorResistance), (voltageSupply))
 
 #endif  // BLOCK_VOLTAGE_ESTIMATION_H
