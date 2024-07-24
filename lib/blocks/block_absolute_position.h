@@ -36,7 +36,7 @@ union AbsPosition {
 class BlockAbsolutePosition {
   BLOCK_INPUT(uint32_t, angle_raw);      // Raw angle input.
   BLOCK_INPUT(AbsPosition, pos_offset);  // Position offset input.
-  BLOCK_INPUT(int32_t, freq);            // Frequency input.
+  BLOCK_INPUT(uint16_t, freq);            // Frequency input.
 
   BLOCK_OUTPUT(AbsPosition, position_raw);   // Raw position output.
   BLOCK_OUTPUT(AbsPosition, position_inst);  // Instantaneous position output.
@@ -59,7 +59,7 @@ class BlockAbsolutePosition {
    */
   BlockAbsolutePosition(const uint32_t& raw_angle,
                         const AbsPosition& pos_offset,
-                        const int32_t& freq)
+                        const uint16_t& freq)
       : angle_raw_(raw_angle),
         pos_offset_(pos_offset),
         freq_(freq),

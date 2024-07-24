@@ -10,26 +10,14 @@
 #include "generic_block.h"
 
 /**
- * @enum MotorType
- * @brief Enumeration to define types of motors.
- */
-enum MotorType : uint8_t {
-  NOPE = 0,  // No motor
-  DC,        // DC motor
-  STEPPER,   // Stepper motor
-  BLDC       // BLDC motor
-};
-
-/**
  * @class SelectorMotorType
  * @brief Class to handle different types of motor controls.
  */
 class SelectorMotorType {
-  const int16_t& voltg_alph_;    // Input for alpha component of voltage
-  const int16_t& voltg_beta_;    // Input for beta component of voltage
-  const int16_t& voltg_sup_;     // Input for supply voltage
-  const int16_t& voltg_brak_;    // Input for brake voltage
-  const MotorType& mode_;  // Input for motor type mode
+  const VectorAxes2D_I16& voltg_;  // Input for alpha component of voltage
+  const int16_t& voltg_sup_;       // Input for supply voltage
+  const int16_t& voltg_brak_;      // Input for brake voltage
+  const MotorType& mode_;          // Input for motor type mode
 
  protected:
   int16_t ChABCD[4];  // Array to store voltages for four channels
@@ -39,7 +27,7 @@ class SelectorMotorType {
    * @brief Enumeration for channel indices.
    */
   enum phase_index : uint8_t {
-    ChannelA = 0,  // Channel A
+    ChannelA = 0,  // Channel sin
     ChannelB = 1,  // Channel B
     ChannelC = 2,  // Channel C
     ChannelD = 3   // Channel D
@@ -81,14 +69,9 @@ class SelectorMotorType {
    */
   SelectorMotorType(const MotorType& mode,
                     const int16_t& sup,
-                    const int16_t& alpha,
-                    const int16_t& beta,
+                    const VectorAxes2D_I16& voltg_norm,
                     const int16_t& brake)
-      : mode_(mode),
-        voltg_sup_(sup),
-        voltg_alph_(alpha),
-        voltg_beta_(beta),
-        voltg_brak_(brake) {}
+      : mode_(mode), voltg_sup_(sup), voltg_(voltg_norm), voltg_brak_(brake) {}
 
   /**
    * @brief Function to update motor control based on mode.
@@ -144,14 +127,14 @@ void SelectorMotorType::math_coil(const int16_t& voltg_ref_,
 }
 
 void SelectorMotorType::tick1PHASE() {
-  SelectorMotorType::math_coil(voltg_alph_, ChABCD[ChannelA], ChABCD[ChannelB]);
+  SelectorMotorType::math_coil(voltg_.sin, ChABCD[ChannelA], ChABCD[ChannelB]);
   ChABCD[ChannelC] = voltg_brak_;
   ChABCD[ChannelD] = voltg_brak_;
 }
 
 void SelectorMotorType::tick2PHASE() {
-  SelectorMotorType::math_coil(voltg_alph_, ChABCD[ChannelA], ChABCD[ChannelB]);
-  SelectorMotorType::math_coil(voltg_beta_, ChABCD[ChannelC], ChABCD[ChannelD]);
+  SelectorMotorType::math_coil(voltg_.sin, ChABCD[ChannelA], ChABCD[ChannelB]);
+  SelectorMotorType::math_coil(voltg_.cos, ChABCD[ChannelC], ChABCD[ChannelD]);
 }
 
 void SelectorMotorType::tick3PHASE() {
@@ -159,17 +142,17 @@ void SelectorMotorType::tick3PHASE() {
   static constexpr int32_t SQRT3DIV2 = 56755;
 
   // Convert beta voltage component to a scaled value using SQRT3DIV2
-  int32_t voltg_beta_sqrt3_div2_ = (SQRT3DIV2 * voltg_beta_) >> 16;
+  int32_t voltg_beta_sqrt3_div2_ = (SQRT3DIV2 * voltg_.cos) >> 16;
 
   //////// Clarke Transformation ///////////////
   // Set phase A voltage to the alpha component
-  ChABCD[ChannelA] = voltg_alph_;
+  ChABCD[ChannelA] = voltg_.sin;
 
   // Calculate phase B voltage: -1/2 * V_alpha + sqrt(3)/2 * V_beta
-  ChABCD[ChannelB] = -voltg_alph_ / 2 + voltg_beta_sqrt3_div2_;
+  ChABCD[ChannelB] = -voltg_.sin / 2 + voltg_beta_sqrt3_div2_;
 
   // Calculate phase C voltage: -1/2 * V_alpha - sqrt(3)/2 * V_beta
-  ChABCD[ChannelC] = -voltg_alph_ / 2 - voltg_beta_sqrt3_div2_;
+  ChABCD[ChannelC] = -voltg_.sin / 2 - voltg_beta_sqrt3_div2_;
 
   // Space Vector Pulse Width Modulation (SVPWM) Algorithm
   int16_t voltg_min_ =

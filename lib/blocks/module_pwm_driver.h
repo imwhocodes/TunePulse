@@ -3,7 +3,6 @@
 
 #include "generic_block.h"
 
-enum ModePWM : uint8_t { ALLIGNED_GND = 0, ALLIGNED_VCC = 1 };
 
 class ModuleDriverPWM {
   BLOCK_INPUT(ModePWM, mode);
