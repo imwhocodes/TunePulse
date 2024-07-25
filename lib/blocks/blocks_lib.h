@@ -5,7 +5,7 @@
 
 #include "controller_pid_feedforward.h"
 #include "math_rotate_vector_sin_cos.h"
-#include "voltg_pattern_control\selector_interconnect_pwm_4ch.h"
+#include "voltg_pattern_control\selector_interconnect_pwm.h"
 #include "voltg_pattern_control\selector_motor_type.h"
 #include "module_pwm_driver.h"
 #include "block_absolute_position.h"

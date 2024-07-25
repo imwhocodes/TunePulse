@@ -56,9 +56,9 @@ constexpr static VectorAxes2D_I16 getSinCos(int32_t angle) {
       return { .sin = static_cast<int16_t>(a), .cos = static_cast<int16_t>(b) };
     case 1:  // PI/2 to PI
       return { .sin = static_cast<int16_t>(b), .cos = static_cast<int16_t>(-a) };
-    case 2:  // PI to 3*PI/2
+    case -2:  // PI to 3*PI/2
       return { .sin = static_cast<int16_t>(-a), .cos = static_cast<int16_t>(-b) };
-    case 3:  // 3*PI/2 to 2*PI
+    case -1:  // 3*PI/2 to 2*PI
       return { .sin = static_cast<int16_t>(-b), .cos = static_cast<int16_t>(a) };
     default:
       // This case should never be reached, but return zeroes for safety

@@ -7,9 +7,6 @@
 
 
 
-
-
-
 static int16_t voltageNormilize(int32_t voltg_mv, int32_t voltg_sense_max_mv) {
   int64_t voltage_norm_raw =
       (static_cast<int64_t>(voltg_mv) << 15) / voltg_sense_max_mv;

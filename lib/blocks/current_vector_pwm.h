@@ -46,13 +46,16 @@ class CurrentVectorPWM {
 
   void tick() {
     if (mode_ & FOC_VOLTAGE_EST) {
-      voltg_I16_.sin = voltageNormilize(voltg_targt_mV_.sin, voltg_sys_.max_sup_voltage);
-      voltg_I16_.cos = voltageNormilize(voltg_targt_mV_.cos, voltg_sys_.max_sup_voltage);
+      voltg_I16_.sin =
+          voltageNormilize(voltg_targt_mV_.sin, voltg_sys_.max_sup_voltage);
+      voltg_I16_.cos =
+          voltageNormilize(voltg_targt_mV_.cos, voltg_sys_.max_sup_voltage);
       return;
     }
     VectorAxes2D_I16 sincos = getSinCos(curnt_targt_ang_mA_.ang);
     curnt_targt_mA_mA_ = {.sin = (curnt_targt_ang_mA_.rad * sincos.sin) >> 15,
                           .cos = (curnt_targt_ang_mA_.rad * sincos.cos) >> 15};
+
 
     currentController.tick();
 
@@ -61,8 +64,6 @@ class CurrentVectorPWM {
     voltg_I16_.cos = voltageNormilize(currentController.get_voltg_mV().cos,
                                       voltg_sys_.max_sup_voltage);
   }
-
-  
 };
 
 #endif  // CURRENT_VECTOR_PWM_H
