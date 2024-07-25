@@ -13,20 +13,9 @@
 #include <inttypes.h>
 #include "control_modes.h"
 
-struct VectorAxes2D_I32 {
-  int32_t sin;  // SIN or Projection on X / sin / D axis
-  int32_t cos;  // COS or Projection on Y / B / Q axis
-} __attribute__((packed));
+#include "data_types.h"
 
-struct VectorPolar2D_I32 {
-  int32_t ang;  // Angle Int1.31
-  int32_t rad;  // Radius
-} __attribute__((packed));
 
-struct VectorAxes2D_I16 {
-  int16_t sin;  // Projection on X / sin / D axis
-  int16_t cos;  // Projection on Y / B / Q axis
-} __attribute__((packed));
 
 // ################### GENERIC BLOCK #################################
 

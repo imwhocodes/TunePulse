@@ -31,23 +31,40 @@ float angle = 0.0;
 
 unsigned long previousMicros = 0;    // Store the last time the code was
 const unsigned long interval = 500;  // Interval in microseconds
-int32_t count = 0;
+
 void loop() {
-  for (int16_t i = 0; i < 10000; i++)
-  {
-      MOTOR_CONTROL::current_target_polar.ang += 1 << 27;
-  MOTOR_CONTROL::current_target_polar.rad = 500;
+  static int32_t count = 0;
 
-  MOTOR_CONTROL::voltg_container.voltg_norm = analogRead(PA2) << 3;
-  MOTOR_CONTROL::voltg_container.voltg_mv =
-      (MOTOR_CONTROL::voltg_container.voltg_norm * 69000) >> 15;  // Danger
-  MOTOR_CONTROL::tick();
-  setPwm(MOTOR_CONTROL::pwm.getPwmChannels());
-  }
-  
-
-count++;
+  // Print the round number
   SerialUSB.println("Round: " + String(count));
 
-  // delayMicroseconds(100);  // 5 ms delay
+  // Get the start time
+  unsigned long startTime = micros();
+
+  for (int32_t i = 0; i < 1000000; i++) {
+    MOTOR_CONTROL::current_target_polar.ang += 1 << 24;
+    MOTOR_CONTROL::current_target_polar.rad = 1000;
+
+    // MOTOR_CONTROL::voltg_container.voltg_norm = adc_read_value(PA_2, 12) << 3;  // TOOO SLOOOOW
+    MOTOR_CONTROL::voltg_container.voltg_norm = 600 << 3;
+    MOTOR_CONTROL::voltg_container.voltg_mv =
+        (MOTOR_CONTROL::voltg_container.voltg_norm * 69000) >> 15;  // Danger
+    MOTOR_CONTROL::tick();
+    setPwm(MOTOR_CONTROL::pwm.getPwmChannels());
+    // delayMicroseconds(50);
+  }
+
+  // Get the end time
+  unsigned long endTime = micros();
+
+  // Calculate the elapsed time
+  unsigned long elapsedTime = endTime - startTime;
+
+  // Print the elapsed time
+  SerialUSB.println("Elapsed time: " + String(float(elapsedTime)/1000000) + " microseconds");
+
+  count++;
+
+  // Delay to avoid flooding the serial output
+  delay(1000);
 }

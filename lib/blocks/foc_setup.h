@@ -16,7 +16,7 @@ VectorAxes2D_I32 voltage_target_mv = {.sin = 0, .cos = 0};     // temporary
 VectorPolar2D_I32 current_target_polar = {.ang = 0, .rad = 0};  // current vector
 VectorAxes2D_I32 current_target_real = {.sin = 0, .cos = 0};   // temporary
 
-int32_t resistance = 6500;
+int32_t resistance = 3500;
 int16_t pwm_resolution = 3000;
 
 VoltageContainer voltg_container = {.voltg_norm = 580,

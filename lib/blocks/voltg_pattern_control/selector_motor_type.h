@@ -6,8 +6,7 @@
 #ifndef SELECTOR_MOTOR_TYPE_H
 #define SELECTOR_MOTOR_TYPE_H
 
-#include <inttypes.h>
-#include "generic_block.h"
+#include "..\data_types.h"
 
 /**
  * @class SelectorMotorType
@@ -19,8 +18,8 @@ class SelectorMotorType {
   const int16_t& voltg_brak_;      // Input for brake voltage
   const MotorType& mode_;          // Input for motor type mode
 
- protected:
-  int16_t ChABCD[4];  // Array to store voltages for four channels
+ private:
+  VoltgChannelslNormlzd ChABCD;  // Array to store voltages for four channels
 
   /**
    * @enum phase_index
@@ -39,9 +38,7 @@ class SelectorMotorType {
    * @param voltg_out_1 Output voltage 1.
    * @param voltg_out_2 Output voltage 2.
    */
-  void math_coil(const int16_t& voltg_ref_,
-                 int16_t& voltg_out_1,
-                 int16_t& voltg_out_2);
+  void math_coil(const int16_t& voltg_ref_, int16_t& voltg_out_1, int16_t& voltg_out_2);
 
   /**
    * @brief Function to handle one-phase motor control.
@@ -88,10 +85,10 @@ class SelectorMotorType {
         tick3PHASE();
         break;
       default:
-        ChABCD[0] = INT16_MIN;
-        ChABCD[1] = INT16_MIN;
-        ChABCD[2] = INT16_MIN;
-        ChABCD[3] = INT16_MIN;
+        ChABCD[ChannelA] = INT16_MIN;
+        ChABCD[ChannelB] = INT16_MIN;
+        ChABCD[ChannelC] = INT16_MIN;
+        ChABCD[ChannelD] = INT16_MIN;
         break;
     }
   }
@@ -100,7 +97,7 @@ class SelectorMotorType {
    * @brief Function to get PWM channel values.
    * @return Reference to array of PWM channel values.
    */
-  constexpr const int16_t (&getPwmChannels() const)[4] { return ChABCD; }
+  const VoltgChannelslNormlzd& getPwmChannels() const { return ChABCD; }
 };
 
 void SelectorMotorType::math_coil(const int16_t& voltg_ref_,
@@ -155,10 +152,8 @@ void SelectorMotorType::tick3PHASE() {
   ChABCD[ChannelC] = -voltg_.sin / 2 - voltg_beta_sqrt3_div2_;
 
   // Space Vector Pulse Width Modulation (SVPWM) Algorithm
-  int16_t voltg_min_ =
-      min(ChABCD[ChannelA], min(ChABCD[ChannelB], ChABCD[ChannelC]));
-  int16_t voltg_max_ =
-      max(ChABCD[ChannelA], max(ChABCD[ChannelB], ChABCD[ChannelC]));
+  int16_t voltg_min_ = min(ChABCD[ChannelA], min(ChABCD[ChannelB], ChABCD[ChannelC]));
+  int16_t voltg_max_ = max(ChABCD[ChannelA], max(ChABCD[ChannelB], ChABCD[ChannelC]));
   int16_t voltg_ref_ = ((voltg_sup_ - voltg_max_) - voltg_min_) >> 1;
 
   // Shift all phase voltages by voltage_ref_
