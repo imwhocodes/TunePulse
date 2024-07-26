@@ -27,28 +27,39 @@ ModuleDriverPWM pwm(pwm_mode,
                     sup_vltg,
                     pwm_mux.getPwmChannels());
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
-  if (htim->Instance == TIM2) {
-    // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
-    uint16_t current_sensor_A, current_sensor_B;
-    ADC1_Poll(&current_sensor_A, &current_sensor_B);
-  }
+extern "C" void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
+  // if (htim->Instance == TIM2) {
+  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
+  // uint16_t current_sensor_A, current_sensor_B;
+  // ADC1_Poll(&current_sensor_A, &current_sensor_B);
+  // }
+}
+
+void init_debug_pin() {
+  // EXP_TX | pc10
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  GPIO_InitTypeDef GPIO_InitStruct;
+  GPIO_InitStruct.Pin = GPIO_PIN_10;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 }
 
 void setup() {
   HAL_Init();
   // SystemClock_Config();
+  init_debug_pin();
   MX_TIM2_Init();
-  HAL_TIM_Base_Start_IT(&htim2);
   MX_TIM2_Start();
 
-  MX_ADC1_Init();
+  // MX_ADC1_Init();
 
-  SerialUSB.begin();    // Initialize SerialUSB
-  while (!SerialUSB) {  // Wait for SerialUSB connection
-    ;
-  }
-  SerialUSB.println("Ready!");
+  // SerialUSB.begin();    // Initialize SerialUSB
+  // while (!SerialUSB) {  // Wait for SerialUSB connection
+  //   ;
+  // }
+  // SerialUSB.println("Ready!");
 
   pinMode(PB2, OUTPUT);
   pinMode(PA4, OUTPUT);

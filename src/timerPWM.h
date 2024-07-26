@@ -76,12 +76,12 @@ void MX_TIM2_Init(void) {
 }
 
 void MX_TIM2_Start() {
-  MX_TIM2_Init();
-
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
+
+  HAL_TIM_Base_Start_IT(&htim2);
 }
 
 void TIM2_Set_PWM_Values(const int16_t* pwmValues) {
@@ -89,6 +89,22 @@ void TIM2_Set_PWM_Values(const int16_t* pwmValues) {
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, pwmValues[1]);
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, pwmValues[2]);
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, pwmValues[3]);
+}
+
+extern "C" {
+void TIM2_IRQHandler(void) {
+  HAL_TIM_IRQHandler(&htim2);
+}
+
+extern "C" void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base) {
+  if (htim_base->Instance == TIM2) {
+    /* Peripheral clock enable */
+    __HAL_RCC_TIM2_CLK_ENABLE();
+    /* TIM2 interrupt Init */
+    HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(TIM2_IRQn);
+  }
+}
 }
 
 #endif  // TIMER_PWM_H
