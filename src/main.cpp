@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "blocks_lib.h"
 #include "current_sensors.h"
+#include "system_clock.h"
 #include "timerPWM.h"
 
 // Variables for motor and PWM configuration
@@ -27,12 +28,21 @@ ModuleDriverPWM pwm(pwm_mode,
                     sup_vltg,
                     pwm_mux.getPwmChannels());
 
+uint16_t current_sensor_A, current_sensor_B, temp_supply_voltage;
+
 extern "C" void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
-  // if (htim->Instance == TIM2) {
-  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
-  // uint16_t current_sensor_A, current_sensor_B;
-  // ADC1_Poll(&current_sensor_A, &current_sensor_B);
-  // }
+  if (htim->Instance == TIM2) {
+    // TODO find a better way to ignore the underflow event
+    static bool skip = true;
+    if (skip = !skip) {
+      return;
+    }
+
+    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
+    ADC1_Poll(&current_sensor_A, &current_sensor_B, &temp_supply_voltage);
+    sup_vltg = temp_supply_voltage;  // signed VS unsigned
+    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
+  }
 }
 
 void init_debug_pin() {
@@ -47,13 +57,11 @@ void init_debug_pin() {
 }
 
 void setup() {
-  HAL_Init();
-  // SystemClock_Config();
   init_debug_pin();
+  MX_ADC1_Init();
+  MX_ADC1_Start();
   MX_TIM2_Init();
   MX_TIM2_Start();
-
-  // MX_ADC1_Init();
 
   // SerialUSB.begin();    // Initialize SerialUSB
   // while (!SerialUSB) {  // Wait for SerialUSB connection
@@ -67,7 +75,7 @@ void setup() {
   digitalWrite(PB2, HIGH);
   digitalWrite(PA4, HIGH);
 
-  analogReadResolution(12);
+  // analogReadResolution(12);
 
   pinMode(PA2, INPUT_ANALOG);
 }
@@ -79,7 +87,6 @@ unsigned long previousMicros = 0;  // Store the last time the code was executed
 const unsigned long interval = 500;  // Interval in microseconds
 
 void loop() {
-  sup_vltg = analogRead(PA2);
   motor_sel.tick();
   pwm_mux.tick();
   pwm.tick();
@@ -106,5 +113,5 @@ void loop() {
   // SerialUSB.println(pwm.getPwmChannels()[1]);
 
   // Add a delay to control the loop execution speed
-  delayMicroseconds(100);  // 5 ms delay
+  delayMicroseconds(3000);
 }

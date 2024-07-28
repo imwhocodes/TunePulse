@@ -29,9 +29,15 @@ void MX_ADC1_Init() {
   LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA);
   LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOB);
   /**ADC1 GPIO Configuration
+  PA2   ------> ADC1_IN3
   PA3   ------> ADC1_IN4
   PB0   ------> ADC1_IN15
   */
+  GPIO_InitStruct.Pin = LL_GPIO_PIN_2;
+  GPIO_InitStruct.Mode = LL_GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+  LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
   GPIO_InitStruct.Pin = LL_GPIO_PIN_3;
   GPIO_InitStruct.Mode = LL_GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
@@ -49,7 +55,7 @@ void MX_ADC1_Init() {
   ADC_InitStruct.LowPowerMode = LL_ADC_LP_MODE_NONE;
   LL_ADC_Init(ADC1, &ADC_InitStruct);
   ADC_REG_InitStruct.TriggerSource = LL_ADC_REG_TRIG_SOFTWARE;
-  ADC_REG_InitStruct.SequencerLength = LL_ADC_REG_SEQ_SCAN_ENABLE_2RANKS;
+  ADC_REG_InitStruct.SequencerLength = LL_ADC_REG_SEQ_SCAN_ENABLE_3RANKS;
   ADC_REG_InitStruct.SequencerDiscont = LL_ADC_REG_SEQ_DISCONT_DISABLE;
   ADC_REG_InitStruct.ContinuousMode = LL_ADC_REG_CONV_SINGLE;
   ADC_REG_InitStruct.DMATransfer = LL_ADC_REG_DMA_TRANSFER_NONE;
@@ -57,7 +63,7 @@ void MX_ADC1_Init() {
   LL_ADC_REG_Init(ADC1, &ADC_REG_InitStruct);
   LL_ADC_SetGainCompensation(ADC1, 0);
   LL_ADC_SetOverSamplingScope(ADC1, LL_ADC_OVS_DISABLE);
-  ADC_CommonInitStruct.CommonClock = LL_ADC_CLOCK_SYNC_PCLK_DIV1;
+  ADC_CommonInitStruct.CommonClock = LL_ADC_CLOCK_SYNC_PCLK_DIV4;
   ADC_CommonInitStruct.Multimode = LL_ADC_MULTI_INDEPENDENT;
   LL_ADC_CommonInit(__LL_ADC_COMMON_INSTANCE(ADC1), &ADC_CommonInitStruct);
 
@@ -92,9 +98,33 @@ void MX_ADC1_Init() {
   LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_15,
                                 LL_ADC_SAMPLINGTIME_2CYCLES_5);
   LL_ADC_SetChannelSingleDiff(ADC1, LL_ADC_CHANNEL_15, LL_ADC_SINGLE_ENDED);
+
+  /** Configure Regular Channel
+   */
+  LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_3, LL_ADC_CHANNEL_3);
+  LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_3,
+                                LL_ADC_SAMPLINGTIME_2CYCLES_5);
+  LL_ADC_SetChannelSingleDiff(ADC1, LL_ADC_CHANNEL_3, LL_ADC_SINGLE_ENDED);
 }
 
-void ADC1_Poll(uint16_t* adc_value1, uint16_t* adc_value2) {
+void MX_ADC1_Start() {
+  // ADC CAlibration
+  LL_ADC_StartCalibration(ADC1, LL_ADC_SINGLE_ENDED);
+  // Wait ADC Calibration
+  while (LL_ADC_IsCalibrationOnGoing(ADC1))
+    ;
+  // Enable ADC
+  LL_ADC_Enable(ADC1);
+  // Wait to Start ADC
+  while (LL_ADC_IsActiveFlag_ADRDY(ADC1) == 0)
+    ;
+  if (LL_ADC_IsActiveFlag_EOC(ADC1))
+    LL_ADC_ClearFlag_EOC(ADC1);
+}
+
+void ADC1_Poll(uint16_t* adc_value1,
+               uint16_t* adc_value2,
+               uint16_t* supply_voltage) {
   LL_ADC_REG_StartConversion(ADC1);
 
   while (!LL_ADC_IsActiveFlag_EOC(ADC1))
@@ -104,6 +134,10 @@ void ADC1_Poll(uint16_t* adc_value1, uint16_t* adc_value2) {
   while (!LL_ADC_IsActiveFlag_EOC(ADC1))
     ;
   *adc_value2 = LL_ADC_REG_ReadConversionData12(ADC1);
+
+  while (!LL_ADC_IsActiveFlag_EOC(ADC1))
+    ;
+  *supply_voltage = LL_ADC_REG_ReadConversionData12(ADC1);
 }
 
 #endif  // CURRENT_SENSORS_H
