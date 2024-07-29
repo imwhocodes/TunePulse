@@ -4,55 +4,9 @@
 #include <Arduino.h>
 #include "stm32g4xx_hal.h"
 
-// This configuration is the default configuration that corresponds to the
-// genericSTM32G431CB board
-
-/*
-extern "C" void SystemClock_Config(void) {
-  RCC_OscInitTypeDef RCC_OscInitStruct = {};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {};
-
-  RCC_PeriphCLKInitTypeDef PeriphClkInit = {};
-
-  HAL_PWREx_ControlVoltageScaling(((uint32_t)0x00000000));
-
-  RCC_OscInitStruct.OscillatorType =
-      RCC_OSCILLATORTYPE_HSI | RCC_OSCILLATORTYPE_HSI48;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV4;
-  RCC_OscInitStruct.PLL.PLLN = 85;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
-  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-    while (1) {
-    };
-  }
-
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK |
-                                RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_8) != HAL_OK) {
-    while (1) {
-    };
-  }
-
-  // PeriphClkInit.PeriphClockSelection = 0x00002000U;
-  // PeriphClkInit.UsbClockSelection = 0x00000000U;
-  // if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
-  //   while (1) {
-  //   };
-  // }
-}
-*/
+// The default SystemClock_Config() implementation for the "genericSTM32G431CB"
+// board can be found here:
+// https://github.com/stm32duino/Arduino_Core_STM32/blob/main/variants/STM32G4xx/G431C(6-8-B)U_G441CBU/generic_clock.c
 
 extern "C" void SystemClock_Config(void) {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
