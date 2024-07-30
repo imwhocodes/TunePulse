@@ -2,6 +2,7 @@
 #define TIMER_PWM_H
 
 #include <Arduino.h>
+#include "config.h"
 #include "stm32g4xx_hal.h"
 
 TIM_HandleTypeDef htim2;
@@ -101,7 +102,7 @@ extern "C" void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base) {
     /* Peripheral clock enable */
     __HAL_RCC_TIM2_CLK_ENABLE();
     /* TIM2 interrupt Init */
-    HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(TIM2_IRQn, TIM2_INT_PRIORITY, 0);
     HAL_NVIC_EnableIRQ(TIM2_IRQn);
   }
 }

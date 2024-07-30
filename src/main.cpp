@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "blocks_lib.h"
 #include "current_sensors.h"
+#include "nvic.h"
 #include "system_clock.h"
 #include "timerPWM.h"
 
@@ -32,16 +33,15 @@ uint16_t current_sensor_A, current_sensor_B, temp_supply_voltage;
 
 extern "C" void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
   if (htim->Instance == TIM2) {
-    // TODO find a better way to ignore the underflow event
-    static bool skip = true;
-    if (skip = !skip) {
-      return;
+    static bool underflow = true;
+    if (underflow = !underflow) {
+      // TODO use TIM2_Set_PWM_Values here
+      NVIC_SetPendingIRQ(EXTI0_IRQn);
+      NVIC_SetPendingIRQ(EXTI1_IRQn);
+    } else {
+      ADC1_Poll(&current_sensor_A, &current_sensor_B, &temp_supply_voltage);
+      sup_vltg = temp_supply_voltage;  // signed VS unsigned
     }
-
-    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
-    ADC1_Poll(&current_sensor_A, &current_sensor_B, &temp_supply_voltage);
-    sup_vltg = temp_supply_voltage;  // signed VS unsigned
-    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
   }
 }
 
@@ -56,8 +56,24 @@ void init_debug_pin() {
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 }
 
+extern "C" void EXTI0_IRQHandler(void) {
+  NVIC_ClearPendingIRQ(EXTI0_IRQn);
+
+  // TODO Add high speed loop math implementation here
+}
+
+extern "C" void EXTI1_IRQHandler(void) {
+  NVIC_ClearPendingIRQ(EXTI1_IRQn);
+
+  // TODO Add FOC implementation here
+  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
+  delayMicroseconds(1);
+  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
+}
+
 void setup() {
   init_debug_pin();
+  NVIC_Init();
   MX_ADC1_Init();
   MX_ADC1_Start();
   MX_TIM2_Init();
