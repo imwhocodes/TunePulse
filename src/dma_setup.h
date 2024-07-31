@@ -1,5 +1,5 @@
-#ifndef DMA_H
-#define DMA_H
+#ifndef DMA_SETUP_H
+#define DMA_SETUP_H
 
 #include <Arduino.h>
 #include "config.h"
@@ -17,4 +17,4 @@ void MX_DMA_Init(void) {
   // NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 }
 
-#endif  // DMA_H
+#endif  // DMA_SETUP_H

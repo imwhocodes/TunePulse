@@ -1,7 +1,8 @@
 #include <Arduino.h>
 #include "blocks_lib.h"
-#include "current_sensors.h"
-#include "dma.h"
+#include "adc_setup.h"
+#include "dma_setup.h"
+#include "gpio_setup.h"
 #include "nvic.h"
 #include "system_clock.h"
 #include "timerPWM.h"
@@ -30,20 +31,22 @@ ModuleDriverPWM pwm(pwm_mode,
                     sup_vltg,
                     pwm_mux.getPwmChannels());
 
-#define DMA_BUFFER_SIZE 3
-__IO uint16_t dma_buffer[DMA_BUFFER_SIZE];
-uint16_t current_sensor_A, current_sensor_B;
+uint16_t current_sensor_A, current_sensor_B, voltage_vref, temperature;
 
 extern "C" void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
   if (htim->Instance == TIM2) {
     static bool underflow = true;
     if (underflow = !underflow) {
       // TODO use TIM2_Set_PWM_Values here
+      TIM2_Set_PWM_Values(pwm.getPwmChannels());
+
       // NVIC_SetPendingIRQ(EXTI0_IRQn);
       // NVIC_SetPendingIRQ(EXTI1_IRQn);
       current_sensor_A = dma_buffer[0];
       current_sensor_B = dma_buffer[1];
-      sup_vltg = dma_buffer[2];
+      sup_vltg = dma_buffer[2] << 3;
+      voltage_vref = dma_buffer[3] << 3;
+      temperature = dma_buffer[4];
     } else {
       ADC1_StartDMAConversion();
     }
@@ -78,31 +81,20 @@ extern "C" void EXTI1_IRQHandler(void) {
 
 void setup() {
   init_debug_pin();
-  NVIC_Init();
+  GPIO_Init();
+  // NVIC_Init();
   MX_DMA_Init();
-  MX_ADC1_Init((uint16_t*)dma_buffer, DMA_BUFFER_SIZE);
+  MX_ADC1_Init((uint16_t*)dma_buffer, DMA_ADC_BUFFER_SIZE);
   MX_ADC1_Start();
   MX_TIM2_Init();
   MX_TIM2_Start();
 
-  // SerialUSB.begin();    // Initialize SerialUSB
-  // while (!SerialUSB) {  // Wait for SerialUSB connection
-  //   ;
-  // }
-  // SerialUSB.println("Ready!");
 
-  pinMode(PB2, OUTPUT);
-  pinMode(PA4, OUTPUT);
-
-  digitalWrite(PB2, HIGH);
-  digitalWrite(PA4, HIGH);
-
-  // analogReadResolution(12);
-
-  pinMode(PA2, INPUT_ANALOG);
+  digitalWriteFast(PB_2, HIGH);
+  digitalWriteFast(PA_4, HIGH);
 }
 
-const float step = 0.15 * PI;  // Step of 0.05 PI
+const float step = 0.01 * PI;  // Step of 0.05 PI
 float angle = 0.0;
 
 unsigned long previousMicros = 0;  // Store the last time the code was executed
@@ -112,8 +104,6 @@ void loop() {
   motor_sel.tick();
   pwm_mux.tick();
   pwm.tick();
-
-  TIM2_Set_PWM_Values(pwm.getPwmChannels());
 
   // Generate sin and cos values with amplitude 10000
   alpha = int16_t(sin(angle) * motor_voltage);
@@ -127,12 +117,9 @@ void loop() {
     angle -= 2 * PI;
   }
 
-  // SerialUSB.print("Sup: ");
-  // SerialUSB.print(sup_vltg);
-  // SerialUSB.print("; PWM: ");
-  // SerialUSB.print(pwm.getPwmChannels()[0]);
-  //   SerialUSB.print("; ");
-  // SerialUSB.println(pwm.getPwmChannels()[1]);
+  // SerialUSB.print(">Sup: " + String(sup_vltg));
+  // SerialUSB.print(">Temp: " + String(temperature));
+  // SerialUSB.print(">Vref: " + String(voltage_vref));
 
   // Add a delay to control the loop execution speed
   delayMicroseconds(3000);
