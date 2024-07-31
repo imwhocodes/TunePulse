@@ -4,10 +4,11 @@
 #include <Arduino.h>
 #include "stm32g4xx_ll_adc.h"
 #include "stm32g4xx_ll_bus.h"
+#include "stm32g4xx_ll_dma.h"
 #include "stm32g4xx_ll_gpio.h"
 #include "stm32g4xx_ll_rcc.h"
 
-void MX_ADC1_Init() {
+void MX_ADC1_Init(uint16_t* buffer, uint32_t buffer_size) {
   LL_ADC_InitTypeDef ADC_InitStruct = {0};
   LL_ADC_REG_InitTypeDef ADC_REG_InitStruct = {0};
   LL_ADC_CommonInitTypeDef ADC_CommonInitStruct = {0};
@@ -48,6 +49,32 @@ void MX_ADC1_Init() {
   GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
   LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  /* ADC1 DMA Init */
+
+  /* ADC1 Init */
+  LL_DMA_SetPeriphRequest(DMA1, LL_DMA_CHANNEL_1, LL_DMAMUX_REQ_ADC1);
+  LL_DMA_SetDataTransferDirection(DMA1, LL_DMA_CHANNEL_1,
+                                  LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
+  LL_DMA_SetChannelPriorityLevel(DMA1, LL_DMA_CHANNEL_1, LL_DMA_PRIORITY_HIGH);
+  LL_DMA_SetMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MODE_CIRCULAR);
+  LL_DMA_SetPeriphIncMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_PERIPH_NOINCREMENT);
+  LL_DMA_SetMemoryIncMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MEMORY_INCREMENT);
+  LL_DMA_SetPeriphSize(DMA1, LL_DMA_CHANNEL_1, LL_DMA_PDATAALIGN_HALFWORD);
+  LL_DMA_SetMemorySize(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MDATAALIGN_HALFWORD);
+
+  LL_DMA_SetPeriphRequest(DMA1, LL_DMA_CHANNEL_1, LL_DMAMUX_REQ_ADC1);
+  LL_DMA_ConfigAddresses(
+      DMA1, LL_DMA_CHANNEL_1,
+      LL_ADC_DMA_GetRegAddr(ADC1, LL_ADC_DMA_REG_REGULAR_DATA),
+      (uint32_t)buffer, LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
+  LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, buffer_size);
+
+  // LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_1);
+  // LL_DMA_EnableIT_HT(DMA1, LL_DMA_CHANNEL_1);
+  // LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_1);
+
+  LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);
+
   /** Common config
    */
   ADC_InitStruct.Resolution = LL_ADC_RESOLUTION_12B;
@@ -58,7 +85,7 @@ void MX_ADC1_Init() {
   ADC_REG_InitStruct.SequencerLength = LL_ADC_REG_SEQ_SCAN_ENABLE_3RANKS;
   ADC_REG_InitStruct.SequencerDiscont = LL_ADC_REG_SEQ_DISCONT_DISABLE;
   ADC_REG_InitStruct.ContinuousMode = LL_ADC_REG_CONV_SINGLE;
-  ADC_REG_InitStruct.DMATransfer = LL_ADC_REG_DMA_TRANSFER_NONE;
+  ADC_REG_InitStruct.DMATransfer = LL_ADC_REG_DMA_TRANSFER_LIMITED;
   ADC_REG_InitStruct.Overrun = LL_ADC_REG_OVR_DATA_PRESERVED;
   LL_ADC_REG_Init(ADC1, &ADC_REG_InitStruct);
   LL_ADC_SetGainCompensation(ADC1, 0);
@@ -122,22 +149,8 @@ void MX_ADC1_Start() {
     LL_ADC_ClearFlag_EOC(ADC1);
 }
 
-void ADC1_Poll(uint16_t* adc_value1,
-               uint16_t* adc_value2,
-               uint16_t* supply_voltage) {
+void ADC1_StartDMAConversion() {
   LL_ADC_REG_StartConversion(ADC1);
-
-  while (!LL_ADC_IsActiveFlag_EOC(ADC1))
-    ;
-  *adc_value1 = LL_ADC_REG_ReadConversionData12(ADC1);
-
-  while (!LL_ADC_IsActiveFlag_EOC(ADC1))
-    ;
-  *adc_value2 = LL_ADC_REG_ReadConversionData12(ADC1);
-
-  while (!LL_ADC_IsActiveFlag_EOC(ADC1))
-    ;
-  *supply_voltage = LL_ADC_REG_ReadConversionData12(ADC1);
 }
 
 #endif  // CURRENT_SENSORS_H
