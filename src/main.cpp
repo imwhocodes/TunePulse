@@ -71,9 +71,33 @@ extern "C" void EXTI1_IRQHandler(void) {
     NVIC_ClearPendingIRQ(EXTI1_IRQn);
 
     // TODO Add FOC implementation here
-    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
-    delayMicroseconds(1);
-    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
+}
+
+extern "C" void DMA1_Channel1_IRQHandler(void) {
+    // Check whether DMA transfer complete caused the DMA interruption
+    if (LL_DMA_IsActiveFlag_TC1(DMA1) == 1) {
+        LL_DMA_ClearFlag_TC1(DMA1);  // Clear flag DMA transfer complete
+
+        // Complete DMA transfer handler
+        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
+    }
+
+    // Check whether DMA half transfer caused the DMA interruption
+    if (LL_DMA_IsActiveFlag_HT1(DMA1) == 1) {
+        LL_DMA_ClearFlag_HT1(DMA1);  // Clear flag DMA half transfer
+
+        // Half DMA transfer handler
+        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
+    }
+
+    // Check whether DMA transfer error caused the DMA interruption
+    /*
+    if (LL_DMA_IsActiveFlag_TE1(DMA1) == 1) {
+        LL_DMA_ClearFlag_TE1(DMA1);  // Clear flag DMA transfer error
+
+        // DMA transfer error handler
+    }
+    */
 }
 
 void setup() {

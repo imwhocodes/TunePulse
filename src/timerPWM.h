@@ -72,8 +72,7 @@ void TIM2_Set_PWM_Values(const int16_t* pwmValues) {
     __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, pwmValues[3]);
 }
 
-extern "C" {
-void TIM2_IRQHandler(void) {
+extern "C" void TIM2_IRQHandler(void) {
     HAL_TIM_IRQHandler(&htim2);
 }
 
@@ -85,7 +84,6 @@ extern "C" void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base) {
         HAL_NVIC_SetPriority(TIM2_IRQn, TIM2_INT_PRIORITY, 0);
         HAL_NVIC_EnableIRQ(TIM2_IRQn);
     }
-}
 }
 
 #endif  // TIMER_PWM_H

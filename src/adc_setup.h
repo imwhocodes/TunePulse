@@ -48,10 +48,10 @@ void MX_ADC1_Init(uint16_t* buffer, uint32_t buffer_size) {
     );
     LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, buffer_size);  // Set data length
 
-    // Uncomment these lines to enable DMA interrupt
-    // LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_1);
-    // LL_DMA_EnableIT_HT(DMA1, LL_DMA_CHANNEL_1);
-    // LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_1);
+    // Enable DMA interrupts
+    LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_1);  // Transfer complete interrupt
+    LL_DMA_EnableIT_HT(DMA1, LL_DMA_CHANNEL_1);  // Half transfer interrupt
+    // LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_1);  // Transfer error interrupt
 
     LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);  // Enable DMA channel
 
