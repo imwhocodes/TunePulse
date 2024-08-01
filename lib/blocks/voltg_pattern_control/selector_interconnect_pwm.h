@@ -60,8 +60,8 @@
 #ifndef SELECTOR_INTERCONNECT_PWM_H
 #define SELECTOR_INTERCONNECT_PWM_H
 
-#include "..\control_modes.h"
-#include "..\data_types.h"
+#include "../control_modes.h"
+#include "../data_types.h"
 
 class SelectorInterconnectPwm {
  private:

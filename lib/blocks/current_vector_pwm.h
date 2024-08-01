@@ -3,7 +3,9 @@
 
 #include "blocks_lib.h"
 #include "controller_current.h"
+#include "driver_voltage_sense.h"
 #include "math_static.h"
+#include "math_trigonometry.h"
 
 class CurrentVectorPWM {
   BLOCK_INPUT(CurrentControlMode, mode);
@@ -55,7 +57,6 @@ class CurrentVectorPWM {
     VectorAxes2D_I16 sincos = getSinCos(curnt_targt_ang_mA_.ang);
     curnt_targt_mA_mA_ = {.sin = (curnt_targt_ang_mA_.rad * sincos.sin) >> 15,
                           .cos = (curnt_targt_ang_mA_.rad * sincos.cos) >> 15};
-
 
     currentController.tick();
 

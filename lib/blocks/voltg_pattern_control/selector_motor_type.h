@@ -62,8 +62,8 @@
 #ifndef SELECTOR_MOTOR_TYPE_H
 #define SELECTOR_MOTOR_TYPE_H
 
-#include "..\control_modes.h"
-#include "..\data_types.h"
+#include "../control_modes.h"
+#include "../data_types.h"
 
 /**
  * @class SelectorMotorType
