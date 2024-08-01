@@ -5,7 +5,7 @@
 #include "stm32g4xx_ll_gpio.h"  // Include STM32G4 GPIO peripheral library
 #include "stm32g4xx_ll_rcc.h"   // Include STM32G4 RCC peripheral library
 
-void GPIO_Init() {
+void IO_Init() {
     LL_GPIO_InitTypeDef GPIO_InitStruct = {0};  // GPIO initialization structure
 
     // Enable the peripheral clock for GPIOA and GPIOB
@@ -57,6 +57,14 @@ void GPIO_Init() {
     LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     GPIO_InitStruct.Pin = LL_GPIO_PIN_2;  // PB2
+    LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    // LED PINS
+    LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_13);
+    LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_14);
+    LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_15);
+    GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+    GPIO_InitStruct.Pin = LL_GPIO_PIN_13 | LL_GPIO_PIN_14 | LL_GPIO_PIN_15;  // PB13, PB14, PB15
     LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 }
 

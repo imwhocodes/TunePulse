@@ -80,10 +80,12 @@ extern "C" void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base) {
     if (htim_base->Instance == TIM2) {
         /* Peripheral clock enable */
         __HAL_RCC_TIM2_CLK_ENABLE();
-        /* TIM2 interrupt Init */
-        HAL_NVIC_SetPriority(TIM2_IRQn, TIM2_INT_PRIORITY, 0);
-        HAL_NVIC_EnableIRQ(TIM2_IRQn);
     }
+}
+
+void PWM_Init() {
+    MX_TIM2_Init();
+    MX_TIM2_Start();
 }
 
 #endif  // TIMER_PWM_H
