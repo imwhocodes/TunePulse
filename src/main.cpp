@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <USBDevice.h>
 #include "blocks_lib.h"
 #include "foc_setup.h"
 #include "timerPWM.h"
@@ -21,7 +22,7 @@ uint32_t readEncoderCallback() {
   SPI_1.transfer16(0x8020);            // Send command word
   respond = SPI_1.transfer16(0x0000);  // Recieve position
   digitalWriteFast(PC_4, HIGH);        // end spi
-  return respond << 17;             // normalize
+  return respond << 17;                // normalize
 }
 
 void setup() {
