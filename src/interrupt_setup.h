@@ -4,6 +4,8 @@
 #include <Arduino.h>
 #include "config.h"
 
+#include "foc_setup.h"
+
 #include "adc_setup.h"
 #include "blocks_lib.h"
 #include "dma_setup.h"
@@ -23,6 +25,17 @@ void NVIC_Init() {
     HAL_NVIC_EnableIRQ(TIM2_IRQn);
 }
 
+extern "C" void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
+    if (htim->Instance == TIM2) {
+        static bool underflow = true;
+        if (underflow = !underflow) {
+            TIM2_Set_PWM_Values(MOTOR_CONTROL::pwm.getPwmChannels());
+        } else {
+            ADC1_StartDMAConversion();
+        }
+    }
+}
+
 int16_t sup_vltg = 10000;  // not used yet
 int16_t current_sensor_A, current_sensor_B, voltage_vref, temperature;
 extern "C" void DMA1_Channel1_IRQHandler(void) {
@@ -32,7 +45,13 @@ extern "C" void DMA1_Channel1_IRQHandler(void) {
 
         // // Complete DMA transfer handler
         // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
-        ADC_get_values(current_sensor_A, current_sensor_B, sup_vltg, voltage_vref, temperature);
+        ADC_get_values(current_sensor_A, current_sensor_B, MOTOR_CONTROL::voltg_container.voltg_norm, voltage_vref, temperature);
+        MOTOR_CONTROL::current_target_polar.ang += 1 << 23;
+        // MOTOR_CONTROL::angleRaw += 1 << 24;
+        
+
+        MOTOR_CONTROL::voltg_container.voltg_mv = (MOTOR_CONTROL::voltg_container.voltg_norm * 69000) >> 15;  // Danger
+        MOTOR_CONTROL::tick();
     }
 
     // Check whether DMA half transfer caused the DMA interruption

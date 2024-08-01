@@ -4,32 +4,6 @@
 #include "generic_block.h"
 
 /**
- * @union AbsPosition
- * @brief Union to represent absolute position in terms of angle and rotations.
- */
-union AbsPosition {
-  /**
-   * @struct
-   * @brief Structure to split position into angle and rotations.
-   */
-  struct {
-    int32_t angle;      // Angle component of the position.
-    int32_t rotations;  // Rotations component of the position.
-  } split;
-  int64_t position;  // Combined 64-bit position value.
-
-  /**
-   * @brief Constructor to initialize the union.
-   * @param r Rotations value.
-   * @param a Angle value.
-   */
-  AbsPosition(int32_t r, int32_t a) {
-    split.rotations = r;
-    split.angle = a;
-  }
-};
-
-/**
  * @class BlockAbsolutePosition
  * @brief Class to manage and calculate absolute position.
  */

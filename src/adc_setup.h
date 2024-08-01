@@ -9,8 +9,6 @@
 
 #include "dma_setup.h"
 
-static constexpr uint16_t VREF_ADC_VOLTAGE_MV = 1212;
-static constexpr int32_t VREF_ADC_VALUE = ((1212 * UINT16_MAX) / 3300);
 
 // Function to initialize ADC1 with DMA
 void MX_ADC1_Init() {

@@ -18,7 +18,7 @@ VectorPolar2D_I32 current_target_polar = {.ang = 0,
 VectorAxes2D_I32 current_target_real = {.sin = 0, .cos = 0};  // temporary
 
 int32_t resistance = 3500;
-int16_t pwm_resolution = 3000;
+int16_t pwm_resolution = 2625;
 
 VoltageContainer voltg_container = {.voltg_norm = 580,
                                     .voltg_mv = 12000,
@@ -52,10 +52,9 @@ AbsPosition pos_offset(0, 0);
 BlockAbsolutePosition positionHandler(angleRaw, pos_offset, 20000);
 
 void tick() {
-  positionHandler.tick();
+  // positionHandler.tick();
 
   currntVectorController.tick();
-
 
   motor_sel.tick();
 
