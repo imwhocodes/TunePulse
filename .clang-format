@@ -1,3 +1,7 @@
 ---
 BasedOnStyle: Chromium
-# ColumnLimit: 90
+
+ColumnLimit: 130
+IndentWidth: 4
+AllowShortLoopsOnASingleLine: true
+
