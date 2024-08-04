@@ -46,9 +46,8 @@ extern "C" void DMA1_Channel1_IRQHandler(void) {
         // // Complete DMA transfer handler
         // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
         ADC_get_values(current_sensor_A, current_sensor_B, MOTOR_CONTROL::voltg_container.voltg_norm, voltage_vref, temperature);
-        MOTOR_CONTROL::current_target_polar.ang += 1 << 23;
+        MOTOR_CONTROL::current_target_polar.ang += 1 << 20;
         // MOTOR_CONTROL::angleRaw += 1 << 24;
-        
 
         MOTOR_CONTROL::voltg_container.voltg_mv = (MOTOR_CONTROL::voltg_container.voltg_norm * 69000) >> 15;  // Danger
         MOTOR_CONTROL::tick();

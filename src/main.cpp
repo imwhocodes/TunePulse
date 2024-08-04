@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <USBDevice.h>
 
 #include "adc_setup.h"
 #include "blocks_lib.h"
@@ -46,16 +47,23 @@ void setup() {
 
     initEncoderCallback();
 
-    SerialUSB.begin();    // Initialize SerialUSB
-    while (!SerialUSB) {  // Wait for SerialUSB connection
-        ;
-    }
+    SerialUSB.begin();  // Initialize SerialUSB
+    // while (!SerialUSB) {  // Wait for SerialUSB connection
+    //     ;
+    // }
     SerialUSB.println("Ready!");
 
-    MOTOR_CONTROL::resistance = 3500;               // Set motor phase resistance in mOhms
-    MOTOR_CONTROL::current_target_polar.rad = 500;  // Set motor phase current in mA
+    MOTOR_CONTROL::resistance = (24 * 1000);                 // Set motor phase resistance in mOhms
+    MOTOR_CONTROL::current_target_polar.rad = (0.4 * 1000);  // Set motor phase current in mA
 }
 
 void loop() {
     // MOTOR_CONTROL::angleRaw = readEncoderCallback();
+    // MOTOR_CONTROL::tick();
+
+    SerialUSB.println();
+    SerialUSB.println(MOTOR_CONTROL::voltg_container.voltg_mv);
+    SerialUSB.println(MOTOR_CONTROL::current_target_polar.ang);
+
+    // delay(100);
 }
