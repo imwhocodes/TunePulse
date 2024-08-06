@@ -75,7 +75,7 @@ class SelectorInterconnectPwm {
      * @param mode Reference to the current mode.
      * @param chABCD Reference to the input array containing PWM channels.
      */
-    constexpr SelectorInterconnectPwm(const Input<PatternPWM>& mode, const Input<VoltgChannelslNormlzd>& chABCD)
+    constexpr SelectorInterconnectPwm(const Input<PatternPWM> mode, const Input<VoltgChannelslNormlzd> chABCD)
         : mode_(mode), chABCD_(chABCD) {}
 
     /**
@@ -86,8 +86,8 @@ class SelectorInterconnectPwm {
         //     normalized_voltage[i] = chABCD_[(mode_ >> (i * 2)) & 0b11];
         // }
 
-        normalized_voltage = {chABCD_.asValue()[(mode_ >> (0 * 2)) & 0b11], chABCD_.asValue()[(mode_ >> (1 * 2)) & 0b11],
-                              chABCD_.asValue()[(mode_ >> (2 * 2)) & 0b11], chABCD_.asValue()[(mode_ >> (3 * 2)) & 0b11]};
+        normalized_voltage = {chABCD_[(mode_ >> (0 * 2)) & 0b11], chABCD_[(mode_ >> (1 * 2)) & 0b11],
+                              chABCD_[(mode_ >> (2 * 2)) & 0b11], chABCD_[(mode_ >> (3 * 2)) & 0b11]};
     }
 
     /**

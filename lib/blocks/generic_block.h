@@ -64,6 +64,13 @@ class Block {
 
 // ################### BLOCK IO #################################
 
+namespace is_array {
+template <class T>
+struct is_array : std::is_array<T> {};
+template <class T, std::size_t N>
+struct is_array<std::array<T, N>> : std::true_type {};
+}  // namespace is_array
+
 template <typename T>
 class Input;
 
@@ -72,7 +79,9 @@ class Output {
     T value;
 
    public:
-    constexpr Output<T>(T&& input) : value{input} {}
+    constexpr Output<T>(T&& init_value) : value{init_value} {}
+
+    constexpr Output<T>() = default;  // For Backward compatibility, if removed force you to initialize te value
 
     constexpr operator T&() { return this->value; }
 
@@ -81,7 +90,13 @@ class Output {
         return this->value;
     };
 
-    // constexpr T& operator[](int i) { this->value[i] }
+    template <typename E = std::enable_if<is_array::is_array<T>::value>>
+    constexpr auto& operator[](std::size_t i) {
+        return this->value[i];
+    }
+    // constexpr typename T::reference operator[](std::size_t i) {
+    //     return this->value[i];
+    // }
 
     constexpr Input<T> asInput() { return this->value; }
 
@@ -89,27 +104,48 @@ class Output {
 };
 
 template <typename T>
+using Variable = Output<T>;
+
+/**
+ * @brief Template to define an input channel in a Block.
+ * An Input<T> is a wrapper to a const reference
+ * Ideally should be only constructable from a Output<T>
+ * @param T The data type of the input.
+ */
+template <typename T>
 class Input {
     const T& value;
 
    public:
-    constexpr Input<T>(const T& as_input) : value{as_input} {}
+    constexpr Input<T>(const T& as_input) : value{as_input} {}  // For Backward compatibility
     constexpr Input<T>(const Output<T>& as_input) : value{as_input.value} {}
     constexpr operator const T&() const { return this->value; }
     constexpr const T& asValue() const { return this->value; }
+
+    template <typename E = std::enable_if<is_array::is_array<T>::value>>
+    constexpr auto& operator[](std::size_t i) {
+        return this->value[i];
+    }
 };
 
-template <typename T>
-using Variable = Output<T>;
+void static_test0() {
+    Output<int> v(0);
+    Input<int> i(v);
 
-// void test() {
-//     Output<int> v(0);
+    v = 5;
+    i;
+    // i = 0;  // This fails
+}
 
-//     Input<int> i(v);
+void static_test1() {
+    Output<std::array<int, 4>> v;
+    Input<std::array<int, 4>> i(v);
 
-//     v = 5;
+    v[0] = 0;
 
-//     // i = 0;
-// }
+    i[0];
+
+    // i[0] = 0;  // This fails
+}
 
 #endif  // GENERIC_BLOCK_H
